@@ -67,7 +67,7 @@ The method stops twice for a person. You choose the song take by ear. You approv
 | `tools/` | Song, plate, rig, bake, render and QA tools, and the review canvas |
 | `templates/film/` | The starting point of a new film |
 | `mvs/noroshi/` | One complete film, without its 3D model and motion clips |
-| `examples/film_code/` | The film code of three more films, as patterns. Their assets are not here |
+| `examples/film_code/` | The film code of eight more films, as patterns. Their assets are not here |
 
 ## Review a film
 

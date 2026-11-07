@@ -443,6 +443,25 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A train must pass behind people and props | Draw it after the plate, and mask it with `Occlusion.blocks` at the row of the rails. Draw people after it |
 | The owner asks for subtitles in another language | The owner can replace the Indonesian line for one film. Put that language in the `id` field of each line. Set `sub_label` in `brief.json`, so that the canvas names the column |
 | A prompt asks for a Javanese song | Lyria sings Javanese. Use `transcribe.py --lang jav` |
+| A rising flood reads as a wipe | Give each pixel the flood progress at which water reaches it. Low ground goes first, shallow water is a dithered mirror, and foam marks the moving edge. See `flood_map` in `examples/film_code/damar.py` |
+| People look tiny next to the props | Do not guess `ppu`. Measure a prop of known height on each plate: a door is 2 m, a desk is 0.75 m, a phone box is about 2 m. A person is about 1.7 m. Run the proof against that prop. Close-up rooms show this most, because their furniture is painted large. Several earlier films have people that are too small in close rooms |
+| Blinking bulbs also catch windows and roof tiles | A colour test alone finds lit windows and tile highlights. Keep only small isolated lights inside the band where the strings hang. Pulse their brightness, and keep their colour. See `bulbs` in `examples/film_code/kirimsalam.py` |
+| Bright snow turns into paper | The usual paper test also catches bright pixels inside the island. Count pale pixels as paper only where they connect to the frame edge. See `plate` in `examples/film_code/haojiao.py` |
+| A warm grade turns snow into paper | Warm light on white snow lands on the paper colour, and the island loses its edge. Tint snow cool, such as rose or blue |
+| The trudge clip walks sideways | Library `Injured Walk` turns about 90 degrees from `walking`. Trudge at 315 goes up and right. Trudge at 225 goes up and left. Read the net `path` after each bake |
+| A walker moves backwards | The library carry clip walks the opposite way to the walking clip. Bake carry clips 180 degrees around. Compare the net `path` of each travel sprite with its direction on screen before a render |
+| Fog reads as a checker lattice | A dither threshold over a large area makes a grid. Blend a slow cloud field into the plate. Draw most of the fog before the people, and only a light veil after. See `fog` in `examples/film_code/hyeong.py` |
+| A crowd walks through a person who stands still | A footprint guard checks solid objects only. Route walkers around each standing person, and read the crossing in a strip |
+| A Korean caption shows empty boxes | Use `malgun.ttf`. `studio_paths.py` has fallbacks for other machines |
+| A spreading fire reads as a ring of lava | Keep the front band thin and ragged, under 1 second. Few embers follow it. See `burning` in `examples/film_code/zhebahuo.py` |
+| Carried props turn a night crowd into pale ghosts | Scale a carried prop to the sprite, and give it the night grade of the scene |
+| A torch flame floats beside the hand | Draw a handle from the `right` point to the `tip` point. The baked handle is too dark to read |
+| A fire scene doubles the file size | Flames and embers change each frame. Slow the ember shimmer, and expect about 1.2 MB per second in fire scenes |
+| A prop comes back on a black glow | Flat magenta can fail. Pass `--background transparent` to `tools/paint.py` |
+| Amber light turns grey after snapping | Blue night plates take the palette. Copy the warm pixels back from the raw plate. See `examples/film_code/damar_fix_lit.py` |
+| Walkers slide on a long path | Pick the frame from the distance walked. See `walk_between` in `examples/film_code/damar.py` |
+| A test window fades to paper at its end | The film fade runs at the end of the window. Do not read the last 1.2 seconds of a window as a fault |
+| Scribe rejects `--lang cmn` | Use `--lang zho` for Mandarin. The transcript of sung Mandarin has many wrong words, so trust its timing more than its text. Ask the owner to judge the words |
 | A take runs past `max_seconds` | Read the loudness tail first. A song can stop on its last word, then hold silence and a stray sound. End the film at the last word with `full.end` |
 | A generated sample ignores the hands again | The crying samples never reached the face. Pick the sample with the right body, and put the hand there with `ik` |
 | A PINOC generation runs for a long time | It can time out, and PINOC refunds the credits. Do not wait with a batch. Bake a stand-in clip, and replace it later. A shorter, plainer prompt worked on the retry |

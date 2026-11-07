@@ -11,6 +11,7 @@ MAC_BLENDER = "/Applications/Blender.app/Contents/MacOS/Blender"
 FONT_FALLBACKS = {
     "msgothic.ttc": ["msgothic.ttc", "NotoSansMonoCJKjp-Regular.otf", "NotoSansCJK-Regular.ttc", "NotoSansCJKjp-Regular.otf", "ヒラギノ角ゴシック W3.ttc", "Hiragino Sans GB.ttc"],
     "simsun.ttc": ["simsun.ttc", "NotoSansCJK-Regular.ttc", "NotoSansCJKsc-Regular.otf", "Hiragino Sans GB.ttc"],
+    "malgun.ttf": ["malgun.ttf", "NotoSansCJK-Regular.ttc", "NotoSansKR-Regular.otf", "AppleSDGothicNeo.ttc"],
 }
 
 
