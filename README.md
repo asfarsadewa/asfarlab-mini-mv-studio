@@ -4,7 +4,23 @@ Mini MV Studio is a method and a toolkit for AI agents. It makes square pixel-ar
 
 An agent writes the song, paints the world, rigs real 3D characters and bakes them into pixel sprites. It renders one mp4 with exact occlusion, natural motion and subtitles. A person judges the song and the film at two gates.
 
-`mvs/noroshi/` is one complete film. Read it, then render it.
+<p align="center"><img src="docs/media/noroshi.gif" width="360" alt="A pixel-art hero lights a beacon on a floating island. Smoke rises and far fires answer."></p>
+
+`mvs/noroshi/` is one complete film. Read it, then render it. The clip above has no sound. Render the film to hear the song.
+
+![Six stills from Noroshi: a dark town, a hero with an ember, a night climb, the beacon, the town by day and a chain of fires.](docs/media/stills.png)
+
+## From concept to frame
+
+![Five panels: character concept, plate, occluders on the plate, baked walk frames and the final frame.](docs/media/pipeline.png)
+
+From left to right, the panels show:
+
+1. The character concept. Tripo turns the concept into a 3D model.
+2. The plate. An image model paints the scenery.
+3. The occluders. These masks put a person behind the scenery.
+4. The baked sprites. Blender rigs the model, plays the motion clips and bakes the frames.
+5. The final frame, with subtitles below the sung lyrics.
 
 ## Quick start
 
@@ -61,6 +77,32 @@ python tools/review_server.py 5350
 
 Open http://127.0.0.1:5350/. Space plays the film. The arrow keys step 1 frame. O shows occlusion. N opens a note.
 
+The canvas saves each note with its time in `mvs/<id>/review/notes.json`. Your agent reads this file and fixes the film.
+
+### Film
+
+The timeline shows scenes, lyrics and the waveform. The zoom lens shows each pixel. The list gives the moments to check.
+
+![The Film tab with the beacon scene, the zoom lens, the checklist and the timeline.](docs/media/review-film.png)
+
+### Occlusion
+
+The overlay shows each occluder on the plate. Use it to find a person who stands in the wrong place.
+
+![The Film tab with coloured occluders on the town and a crowd in the zoom lens.](docs/media/review-occlusion.png)
+
+### Motion
+
+Each baked clip loops at true sprite pixels. You can slow a clip and change its background.
+
+![The Motion tab with a grid of 17 looping sprite clips.](docs/media/review-motion.png)
+
+### Subtitles
+
+The table shows each sung line with its translation. Click a line to hear it in the film.
+
+![The Subtitles tab with Japanese lyrics and Bahasa Indonesia translations.](docs/media/review-subtitles.png)
+
 ## Status
 
 The author develops this on Windows. The tools have portable paths, but the author has not tested them on macOS or Linux. Please report what you find.
@@ -69,4 +111,4 @@ The author develops this on Windows. The tools have portable paths, but the auth
 
 The code is under the MIT license. See `LICENSE`. The example film is under CC BY-NC 4.0. See `LICENSE-FILMS.md`. `NOTICE.md` covers third-party services and your own responsibilities.
 
-Mini MV Studio was created by @ashthepeasant.
+@ashthepeasant created Mini MV Studio.

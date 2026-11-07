@@ -1,8 +1,8 @@
 # Film license
 
-The MIT license in `LICENSE` covers the code and the docs.
+The MIT license in `LICENSE` covers the code and the docs. It does not cover `docs/media/`.
 
-The film in `mvs/noroshi/` is under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). This covers its song, plates, sprites, lyrics and subtitles. Copyright (c) 2026 ashthepeasant.
+The film in `mvs/noroshi/` is under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). This covers its song, plates, sprites, lyrics and subtitles. The same license covers the images in `docs/media/`, because they show the film. Copyright (c) 2026 ashthepeasant.
 
 The full license text is at https://creativecommons.org/licenses/by-nc/4.0/legalcode.
 
