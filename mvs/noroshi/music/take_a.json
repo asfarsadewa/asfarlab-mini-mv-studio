@@ -1,0 +1,10 @@
+{
+  "model": "lyria-3.5",
+  "prompt": "Original modern Japanese pop-rock anthem, heroic and urgent, about 60 seconds, 148 BPM, minor key that lifts to major in the chorus. Sung in Japanese by one male tenor: close, restless and low in the verse, then a huge soaring chorus with bright high notes and doubled harmonies. Instruments: an angular syncopated piano riff, tight funky electric bass, crisp live drums, sharp clean electric guitar, a sweeping string section in the chorus. Structure: 2 bar piano riff intro, verse, a rising pre-chorus with a drum fill and one beat of silence, then a full band chorus that hits hard on the first beat. End on the final chorus chord.\n\nLyrics, sung exactly as written:\n[Verse]\n灰の町で 息をひそめて\n消えない火を 胸に隠した\n\n[Pre-Chorus]\n風が変わる 夜が割れる\nひとりでいい 手を伸ばせ\n\n[Chorus]\nのろしを上げろ 空の果てまで\n届くまで 僕は叫ぶ\nのろしを上げろ 誰かの夜に\nこの火を 繋いでいけ",
+  "interactionId": "v1_ChdNbXJzYW9iT0JOSzExZThQZ3RtYXdRdxIXTW1yc2FvYk9CTksxMWU4UGd0bWF3UXc",
+  "mime": "audio/mpeg",
+  "seconds": 25.8,
+  "text": [
+    "[[A0]]\n[[B1]]\n[:] 灰の町で 息をひそめて\n[:] 消えない火を 胸に隠した\n[[C2]]\n[:] 風が変わる 夜が割れる\n[:] ひとりでいい 手を伸ばせ\n[[D3]]\n[:] のろしを上げろ 空の果てまで\n[:] 届くまで 僕は叫ぶ\n[:] のろしを上げろ 誰かの夜に\n[:] この火を 繋いでいけ\n[[D4]]\n[:] のろしを上げろ 空の果てまで\n[:] 届くまで 僕は叫ぶ\n[:] のろしを上げろ 誰かの夜に\n[:] この火を 繋いでいけ"
+  ]
+}

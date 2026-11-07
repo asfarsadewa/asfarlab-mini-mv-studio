@@ -1,0 +1,9 @@
+Draw a new pixel art illustration for a square music video frame. Image 1 is the approved art of this film. Match its pixel size, colour ramps, Bayer dither, dark outlines, hard shadows to screen right, 30 degree orthographic view, stone, layered earth underside and paper background exactly. Do not copy its layout.
+
+Scene: one small house on a single floating chunk of rock, centred in a square frame, on plain warm off-white paper. The view is a clean cutaway. The two walls nearest the viewer and the front of the roof are removed, so the viewer sees straight into one bare room. The cut edges of the walls and roof show clean stone and timber layers. The room has a worn plank floor, two plain walls, one small shuttered window, a low empty table and a folded blanket on the floor. The floor in the middle of the room stands clear and empty. The house is drawn large, so the room fills the middle of the frame. Grey ash lies on the remaining roof and on the rock outside.
+
+Palette mood: cold, dark timber, ash grey, slate.
+
+Keep out: people, animals, fire, flames, candles, lit lamps, smoke, sparks, text, letters, border, watermark, user interface.
+
+Style rules: crisp visible square pixels of one consistent size across the whole image. No smooth painterly rendering. No 3D render look. No lens blur.

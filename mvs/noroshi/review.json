@@ -1,0 +1,133 @@
+{
+  "scenes": [
+    {
+      "name": "Ash town",
+      "from": 0,
+      "to": 22.84,
+      "plate": "town",
+      "night": true
+    },
+    {
+      "name": "Ember",
+      "from": 22.84,
+      "to": 29.733,
+      "plate": "room",
+      "night": true
+    },
+    {
+      "name": "Climb",
+      "from": 29.733,
+      "to": 36.6,
+      "plate": "island",
+      "night": true
+    },
+    {
+      "name": "Beacon",
+      "from": 36.6,
+      "to": 50.333,
+      "plate": "island",
+      "night": false
+    },
+    {
+      "name": "Town answers",
+      "from": 50.333,
+      "to": 57.167,
+      "plate": "town",
+      "night": false
+    },
+    {
+      "name": "Chain",
+      "from": 57.167,
+      "to": 65.4,
+      "plate": "archipelago",
+      "night": false
+    }
+  ],
+  "checks": [
+    {
+      "t": 13.4,
+      "x": 195,
+      "y": 205,
+      "text": "The hero leaves the doorway."
+    },
+    {
+      "t": 15.05,
+      "x": 170,
+      "y": 210,
+      "text": "The hero walks behind the well."
+    },
+    {
+      "t": 17.5,
+      "x": 155,
+      "y": 215,
+      "text": "The hero crouches at the back of the well."
+    },
+    {
+      "t": 25,
+      "x": 178,
+      "y": 205,
+      "text": "Both hands hold the ember."
+    },
+    {
+      "t": 31.2,
+      "x": 185,
+      "y": 225,
+      "text": "The hero climbs the upper flight."
+    },
+    {
+      "t": 33.5,
+      "x": 193,
+      "y": 190,
+      "text": "The hero walks across the plaza."
+    },
+    {
+      "t": 34.3,
+      "x": 190,
+      "y": 175,
+      "text": "The hero turns, then raises the torch."
+    },
+    {
+      "t": 36.5,
+      "x": 170,
+      "y": 165,
+      "text": "The torch meets the rim on the hit.",
+      "slow": 0.25
+    },
+    {
+      "t": 37.2,
+      "x": 163,
+      "y": 150,
+      "text": "The flame stays inside the bowl."
+    },
+    {
+      "t": 39.5,
+      "x": 191,
+      "y": 170,
+      "text": "The strike blends into the stance."
+    },
+    {
+      "t": 44,
+      "x": 191,
+      "y": 170,
+      "text": "The cloak and scarf move with the wind."
+    },
+    {
+      "t": 54,
+      "x": 170,
+      "y": 225,
+      "text": "The people stand on the ground."
+    },
+    {
+      "t": 55.7,
+      "x": 137,
+      "y": 232,
+      "text": "The roof hides the legs behind it."
+    },
+    {
+      "t": 62,
+      "x": 180,
+      "y": 90,
+      "text": "Each far fire sits on its brazier."
+    }
+  ]
+}

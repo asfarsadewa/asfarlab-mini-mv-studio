@@ -1,0 +1,9 @@
+Draw a new pixel art illustration for a square music video frame. Image 1 is the approved art of this film. Match its pixel size, colour ramps, Bayer dither, dark outlines, hard shadows to screen right, 30 degree orthographic view, layered earth undersides and paper background exactly. Do not copy its size or its position in the frame.
+
+Scene: a very wide view of nine tiny floating islands scattered across a square frame, on plain warm off-white paper. The islands sit at different heights and they fill the whole frame evenly, from top to bottom, with open paper between them. Islands higher in the frame are smaller and paler, to show distance. The largest island sits near the centre, and it is a rocky hill with one worn stone stair and a ruined stone tower base. The other islands each carry a small hill, a few houses or a few pines. Every island has one tiny empty iron brazier on its highest point, clearly visible against the paper.
+
+Palette mood: clear daylight, muted greens, slate stone, dark earth.
+
+Keep out: people, animals, fire, flames, smoke, sparks, flags, clouds, mountains, text, letters, border, watermark, user interface.
+
+Style rules: crisp visible square pixels of one consistent size across the whole image. No smooth painterly rendering. No 3D render look. No lens blur.

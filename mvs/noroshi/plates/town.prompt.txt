@@ -1,0 +1,11 @@
+Draw a new pixel art illustration for a square music video frame. Image 1 is the approved art of this film. Match its pixel size, colour ramps, Bayer dither, dark outlines, hard shadows to screen right, 30 degree orthographic view, stone walls, layered earth underside and paper background exactly. Image 2 is a further reference for small houses, tile roofs and lanes. Do not copy its layout, logo or text.
+
+Scene: one floating island in the lower middle of a square frame, on plain warm off-white paper. On it stands a small, tightly packed old town of about fourteen low houses with grey ash-dusted tile roofs and dark timber walls, joined by narrow stone lanes. A small empty square with a stone well sits at the centre of the town. Several flat stone rooftop platforms and small terraces stand clear and empty. All windows and doors are dark. The town looks abandoned and quiet. Ash lies on the roofs and lanes in pale grey drifts. A few bare trees stand between the houses.
+
+Leave the upper third of the frame as open paper.
+
+Palette mood: cold, ash grey, slate, dark timber, faded terracotta under the ash.
+
+Keep out: people, animals, fire, flames, lit lamps, smoke, sparks, flags, signs, text, letters, border, watermark, user interface.
+
+Style rules: crisp visible square pixels of one consistent size across the whole image. No smooth painterly rendering. No 3D render look. No lens blur.

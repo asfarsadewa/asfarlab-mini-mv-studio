@@ -1,0 +1,21 @@
+{
+  "id": "new_film",
+  "title": "New film",
+  "grid": 360,
+  "fps": 30,
+  "paper": [245, 240, 228],
+  "year": 2026,
+  "idea": "Write one idea that nobody could use for another film.",
+  "takes": {
+    "take_a": "Describe the music here in musical terms. Name each section. Do not name an artist.",
+    "take_b": "Describe a second direction for the same song."
+  },
+  "lyrics": "[Instrumental intro]\n\n[Verse]\nWrite the lyrics here.\n\n[Chorus]\nWrite the chorus here.\n\n[Instrumental outro]",
+  "take": "take_a",
+  "test": {"start": 0, "end": 10},
+  "full": {"start": 0, "end": 90},
+  "hit": 0,
+  "lines": [
+    {"from": 1.0, "to": 4.0, "ja": "The sung line goes here", "id": "The translated line goes here"}
+  ]
+}

@@ -1,0 +1,13 @@
+Draw a new pixel art illustration for a square music video frame. Image 1 is a style reference only. Follow its pixel size, hue-shifted colour ramps, Bayer dither, dark depth-buffer outlines, hard shadows to screen right, 30 degree orthographic view, stone retaining walls, layered earth underside and paper colour. Do not copy its town, its buildings, its logo or its text.
+
+Scene: one small floating island in the lower middle of a square frame, on plain warm off-white paper. The island is a steep rocky hill with narrow stone terraces, one worn stone stair that climbs to the summit, and a few windblown pines. A ruined stone watchtower base stands on the flat summit. On top of it sits one wide, empty iron beacon brazier, unlit, with cold dark coals. The underside of the island is layered earth and hanging rock points.
+
+Background: three very pale blue mountain ridges, low contrast, fading into the paper across the upper part of the frame. Each ridge has one tiny dark unlit stone cairn on its crest.
+
+Palette mood: cold grey evening light, muted greens, slate stone, dark earth.
+
+Keep empty: leave clear space on the summit beside the brazier for a person to stand. Leave the upper third of the frame mostly open paper.
+
+Keep out: people, animals, fire, flames, smoke, sparks, flags, text, letters, border, watermark, user interface.
+
+Style rules: crisp visible square pixels of one consistent size across the whole image. No smooth painterly rendering. No 3D render look. No lens blur.

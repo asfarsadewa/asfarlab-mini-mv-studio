@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MV Review</title>
+<style>
+  :root {
+    --paper: #fbf9f5; --ink: #18161c; --soft: #6c675f; --line: #ddd8cd; --panel: #f2eee6;
+    --ember: #c4442a; --fire: #e87a24; --dusk: #4a5578;
+    --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.45 var(--mono); }
+  button, select, textarea { font: inherit; color: inherit; }
+  button { background: var(--paper); border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; border-radius: 0; }
+  button:hover { background: var(--panel); }
+  button.on { background: var(--ink); color: var(--paper); }
+  button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--fire); outline-offset: 1px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; padding: 12px 16px; border-bottom: 1px solid var(--ink); }
+  h1 { margin: 0; font-size: 15px; }
+  h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); font-weight: 600; }
+  nav { margin-left: auto; display: flex; gap: 4px; }
+  main { padding: 14px 16px 40px; }
+  .view[hidden] { display: none; }
+
+  .watch { display: grid; grid-template-columns: minmax(280px, min(68vh, 640px)) minmax(280px, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .watch { grid-template-columns: 1fr; } nav { margin-left: 0; } }
+  .stage { position: relative; width: 100%; aspect-ratio: 1; background: var(--ink); overflow: hidden; }
+  .stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+  .stage canvas { pointer-events: none; }
+  .stage.phone { width: min(100%, 360px); margin: 0 auto; }
+  .bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; }
+  .time { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .tl { position: relative; height: 62px; margin-top: 10px; background: var(--panel); border: 1px solid var(--line); cursor: pointer; touch-action: none; user-select: none; }
+  .tl .scene { position: absolute; top: 0; height: 24px; border-right: 1px solid var(--paper); padding: 4px 4px; overflow: hidden; white-space: nowrap; font-size: 10px; color: var(--paper); }
+  .tl .scene.night { background: var(--dusk); } .tl .scene.day { background: #a39a84; }
+  .tl .lyric { position: absolute; top: 26px; height: 8px; background: var(--ink); }
+  .tl canvas { position: absolute; left: 0; top: 36px; width: 100%; height: 25px; }
+  .tl .note { position: absolute; top: 0; width: 3px; height: 100%; background: var(--ember); pointer-events: none; }
+  .tl .head { position: absolute; top: 0; width: 1px; height: 100%; background: var(--fire); box-shadow: 0 0 0 1px rgba(232,122,36,.35); pointer-events: none; }
+
+  .side { display: grid; gap: 14px; min-width: 0; }
+  .card { border: 1px solid var(--line); padding: 10px; background: #fff8; min-width: 0; }
+  .lensrow { display: grid; grid-template-columns: 200px 1fr; gap: 10px; }
+  #lens { width: 200px; height: 200px; image-rendering: pixelated; background: var(--ink); display: block; }
+  @media (max-width: 500px) { .lensrow { grid-template-columns: 1fr; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 11px; margin-top: 6px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 4px; }
+  .sub { min-height: 50px; background: var(--ink); color: var(--paper); text-align: center; padding: 7px; }
+  .sub b { display: block; font-size: 15px; font-weight: 400; } .sub span { color: #d6d0c4; font-size: 12px; }
+  .list { display: grid; gap: 2px; max-height: 250px; overflow: auto; }
+  .list button { display: flex; gap: 8px; border: 0; border-bottom: 1px solid var(--line); text-align: left; padding: 4px 3px; background: transparent; }
+  .list button:hover { background: var(--panel); }
+  .list time { color: var(--soft); flex: none; width: 58px; font-variant-numeric: tabular-nums; }
+  .list .ok { margin-left: auto; color: var(--soft); flex: none; }
+  .list .ok.done { color: #2e7a3c; font-weight: 700; }
+  textarea { width: 100%; min-height: 56px; border: 1px solid var(--ink); background: var(--paper); padding: 6px; resize: vertical; display: block; }
+  .row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
+  .quiet { color: var(--soft); font-size: 11px; }
+  .notes { display: grid; gap: 4px; margin-top: 8px; max-height: 220px; overflow: auto; }
+  .notes div { display: flex; gap: 8px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+  .notes a { color: var(--ember); cursor: pointer; flex: none; font-variant-numeric: tabular-nums; }
+  .notes p { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .notes button { border: 0; padding: 0 4px; background: transparent; color: var(--soft); }
+
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+  .clip { border: 1px solid var(--line); padding: 8px; }
+  .clip canvas { width: 100%; aspect-ratio: 1; image-rendering: pixelated; background: var(--bg, #d6d2c8); display: block; }
+  .clip h3 { margin: 0 0 4px; font-size: 13px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
+
+  table { border-collapse: collapse; width: 100%; }
+  td, th { text-align: left; border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
+  th { font-weight: 600; color: var(--soft); font-size: 11px; }
+  tbody tr { cursor: pointer; } tbody tr:hover { background: var(--panel); }
+  .ja { font-size: 15px; }
+  .err { padding: 16px; color: var(--ember); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">MV Review</h1>
+  <span class="quiet" id="meta"></span>
+  <nav>
+    <button data-view="watch" class="on">Film</button>
+    <button data-view="clips">Motion</button>
+    <button data-view="subs">Subtitles</button>
+  </nav>
+</header>
+<main>
+  <section class="view" id="view-watch">
+    <div class="watch">
+      <div>
+        <div class="stage" id="stage">
+          <video id="v" playsinline preload="auto"></video>
+          <canvas id="overlay" width="360" height="360"></canvas>
+        </div>
+        <div class="bar">
+          <button id="play" title="Space">Play</button>
+          <button id="back" title="Left arrow">&larr; Frame</button>
+          <button id="next" title="Right arrow">Frame &rarr;</button>
+          <button class="rate" data-rate="0.25">¼×</button>
+          <button class="rate" data-rate="0.5">½×</button>
+          <button class="rate on" data-rate="1">1×</button>
+          <span class="time" id="clock">0:00.00</span>
+        </div>
+        <div class="bar">
+          <button id="occ" title="O">Occlusion</button>
+          <button id="grid" title="G">Pixel grid</button>
+          <button id="phone" title="P">Phone size</button>
+        </div>
+        <div class="tl" id="tl"><canvas id="wave" width="1200" height="50"></canvas><div class="head" id="head"></div></div>
+      </div>
+      <div class="side">
+        <div class="sub" id="sub"></div>
+        <div class="card">
+          <h2>Zoom</h2>
+          <div class="lensrow">
+            <canvas id="lens" width="400" height="400"></canvas>
+            <div>
+              <p class="quiet" style="margin:0 0 6px">Move the pointer over the film. Click to hold the zoom on that spot.</p>
+              <div class="row"><button class="zoom" data-z="30">×6</button><button class="zoom on" data-z="50">×4</button><button class="zoom" data-z="90">×2</button></div>
+              <div id="legend" class="legend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Check these moments</h2>
+          <div class="list" id="checks"></div>
+        </div>
+        <div class="card">
+          <h2>Notes</h2>
+          <textarea id="note" placeholder="Write a note. It attaches to the current time."></textarea>
+          <div class="row"><button id="save">Save note</button><span class="quiet" id="saved"></span></div>
+          <div class="notes" id="notes"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-clips" hidden>
+    <div class="tools">
+      <span class="quiet">Each loop is one baked clip at true sprite pixels.</span>
+      <button class="crate" data-rate="0.25">¼×</button><button class="crate" data-rate="0.5">½×</button><button class="crate on" data-rate="1">1×</button>
+      <button class="cbg on" data-bg="#d6d2c8">Stone</button><button class="cbg" data-bg="#fbf9f5">Paper</button><button class="cbg" data-bg="#4a5578">Dusk</button>
+    </div>
+    <div class="clips" id="clips"></div>
+  </section>
+
+  <section class="view" id="view-subs" hidden>
+    <p class="quiet" style="margin-top:0">Click a line to hear it in the film. Write corrections as notes on the Film tab.</p>
+    <table><thead><tr><th>Time</th><th>Sung lyric</th><th id="sublabel">Bahasa Indonesia</th></tr></thead><tbody id="subs"></tbody></table>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const film = new URLSearchParams(location.search).get('film');
+const base = `/mvs/${film}/`;
+const FPS = 30, G = 360;
+const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const json = u => fetch(u).then(r => { if (!r.ok) throw new Error(`${u}: ${r.status}`); return r.json(); });
+const COLOURS = [[0,0,0],[255,0,90],[0,200,255],[255,210,0],[60,220,90],[180,80,255],[255,130,0],[0,110,255]];
+
+let review, brief, notes = [], scenes = [], lensAt = null, held = false, zoomSrc = 50, showOcc = false, showGrid = false;
+const v = $('v'), overlay = $('overlay'), octx = overlay.getContext('2d'), lens = $('lens'), lctx = lens.getContext('2d');
+const occMaps = {};
+
+async function loadVideo(name) {
+  const at = v.currentTime || 0;
+  $('meta').textContent = 'The video is loading.';
+  const blob = await fetch(`/output/${film}/${name}`).then(r => { if (!r.ok) throw new Error(`${name}: ${r.status}`); return r.blob(); });
+  if (v.src) URL.revokeObjectURL(v.src);
+  v.src = URL.createObjectURL(blob);
+  v.currentTime = at;
+  $('meta').textContent = `${name}, ${(blob.size / 1e6).toFixed(1)} MB, ${brief.grid} grid pixels shown at 1080`;
+}
+
+async function loadOcc(plate, items) {
+  const im = new Image();
+  im.src = `${base}occlusion/${plate}.png`;
+  await im.decode();
+  const c = document.createElement('canvas');
+  c.width = im.width; c.height = im.height;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(im, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const n = d.data[i];
+    const col = COLOURS[n % COLOURS.length];
+    d.data[i] = col[0]; d.data[i + 1] = col[1]; d.data[i + 2] = col[2]; d.data[i + 3] = n ? 135 : 0;
+  }
+  x.putImageData(d, 0, 0);
+  occMaps[plate] = { canvas: c, items };
+}
+
+const sceneAt = t => scenes.find(s => t >= s.from && t < s.to) || scenes[scenes.length - 1];
+
+function drawOverlay() {
+  octx.clearRect(0, 0, G, G);
+  const s = sceneAt(v.currentTime);
+  if (showOcc && occMaps[s.plate]) octx.drawImage(occMaps[s.plate].canvas, 0, 0);
+  if (showOcc && occMaps[s.plate]) {
+    octx.strokeStyle = '#fff'; octx.lineWidth = 1;
+    occMaps[s.plate].items.filter(o => o.footprint).forEach(o => {
+      const [cx, cy, rx, ry] = o.footprint;
+      octx.beginPath(); octx.ellipse(cx, cy, rx, ry, 0, 0, 7); octx.stroke();
+    });
+  }
+  if (showGrid) {
+    octx.fillStyle = 'rgba(255,0,180,.28)';
+    for (let i = 0; i <= G; i += 20) { octx.fillRect(i, 0, 1, G); octx.fillRect(0, i, G, 1); }
+  }
+  const items = showOcc && occMaps[s.plate] ? occMaps[s.plate].items : [];
+  $('legend').innerHTML = items.map((o, k) => {
+    const c = COLOURS[(k + 1) % COLOURS.length];
+    return `<span><i style="background:rgb(${c})"></i>${esc(o.name.replace(/_/g, ' '))}</span>`;
+  }).join('');
+}
+
+function drawLens() {
+  const p = lensAt || { x: 180, y: 180 };
+  const scale = v.videoWidth ? v.videoWidth / G : 3;
+  const half = zoomSrc / 2;
+  const sx = Math.max(0, Math.min(G - zoomSrc, p.x - half)), sy = Math.max(0, Math.min(G - zoomSrc, p.y - half));
+  lctx.imageSmoothingEnabled = false;
+  lctx.fillStyle = '#18161c'; lctx.fillRect(0, 0, 400, 400);
+  if (v.readyState >= 2) lctx.drawImage(v, sx * scale, sy * scale, zoomSrc * scale, zoomSrc * scale, 0, 0, 400, 400);
+  if (showOcc) lctx.drawImage(overlay, sx, sy, zoomSrc, zoomSrc, 0, 0, 400, 400);
+}
+
+function tick() {
+  const t = v.currentTime || 0, dur = v.duration || brief.full.end;
+  $('clock').textContent = `${fmt(t)}  f${Math.round(t * FPS)}`;
+  $('head').style.left = `${t / dur * 100}%`;
+  const line = brief.lines.find(l => t >= l.from && t < l.to);
+  $('sub').innerHTML = line ? `<b>${esc(line.ja)}</b><span>${esc(line.id)}</span>` : '<span>The song has no line here.</span>';
+  drawOverlay();
+  drawLens();
+}
+
+function seek(t, pause = true) {
+  if (pause) { v.pause(); }
+  v.currentTime = Math.max(0, Math.min(t, (v.duration || 999) - 0.01));
+}
+function step(n) { v.pause(); v.currentTime = Math.max(0, (Math.round(v.currentTime * FPS) + n) / FPS + 0.001); }
+
+function setRate(r) {
+  v.playbackRate = r;
+  document.querySelectorAll('.rate').forEach(b => b.classList.toggle('on', +b.dataset.rate === r));
+}
+const toggle = id => { const on = !$(id).classList.contains('on'); $(id).classList.toggle('on', on); return on; };
+const togglePlay = () => v.paused ? v.play() : v.pause();
+
+function renderChecks() {
+  const seen = new Set(notes.filter(n => n.check).map(n => n.check));
+  $('checks').innerHTML = review.checks.map((c, i) => `<button data-i="${i}"><time>${fmt(c.t).slice(0, 7)}</time><span>${esc(c.text)}</span><span class="ok ${seen.has(c.text) ? 'done' : ''}" data-ok="${i}" title="Mark this moment as good">${seen.has(c.text) ? 'Good' : 'Mark good'}</span></button>`).join('');
+  $('checks').querySelectorAll('button').forEach(b => b.onclick = e => {
+    const c = review.checks[+b.dataset.i];
+    if (e.target.dataset.ok !== undefined) {
+      if (!notes.some(n => n.check === c.text)) { notes.push({ t: c.t, text: `Good: ${c.text}`, check: c.text }); saveNotes(); }
+      return;
+    }
+    lensAt = { x: c.x, y: c.y }; held = true;
+    setRate(c.slow || 0.5);
+    seek(c.t);
+  });
+}
+
+function renderNotes() {
+  notes.sort((a, b) => a.t - b.t);
+  const dur = v.duration || brief.full.end;
+  document.querySelectorAll('.tl .note').forEach(n => n.remove());
+  notes.forEach(n => { const m = document.createElement('div'); m.className = 'note'; m.style.left = `${n.t / dur * 100}%`; if (n.check) m.style.background = '#2e7a3c'; $('tl').appendChild(m); });
+  $('notes').innerHTML = notes.length ? notes.map((n, i) => `<div><a data-t="${esc(n.t)}">${fmt(n.t).slice(0, 7)}</a><p></p><button data-del="${i}" aria-label="Delete note">×</button></div>`).join('') : '<span class="quiet">The film has no notes yet.</span>';
+  $('notes').querySelectorAll('p').forEach((p, i) => { p.textContent = notes[i].text; });
+  $('notes').querySelectorAll('a').forEach(a => a.onclick = () => seek(+a.dataset.t));
+  $('notes').querySelectorAll('button').forEach(b => b.onclick = () => { notes.splice(+b.dataset.del, 1); saveNotes(); });
+  renderChecks();
+}
+
+// One save runs at a time. A change during a save sends the newest notes when that save ends.
+let saving = false, saveAgain = false;
+async function saveNotes() {
+  renderNotes();
+  saveAgain = true;
+  if (saving) return;
+  saving = true;
+  try {
+    while (saveAgain) {
+      saveAgain = false;
+      const r = await fetch(`/api/notes/${encodeURIComponent(film)}`, { method: 'POST', body: JSON.stringify(notes) });
+      if (!r.ok) throw new Error(r.status);
+    }
+    $('saved').textContent = `Claude can read ${notes.length} saved notes.`;
+  } catch (e) { $('saved').textContent = 'The save failed. Keep this tab open.'; }
+  finally { saving = false; }
+}
+
+function timeline() {
+  const dur = v.duration;
+  const tl = $('tl');
+  scenes.forEach(s => {
+    const d = document.createElement('div');
+    d.className = `scene ${s.night ? 'night' : 'day'}`;
+    d.style.left = `${s.from / dur * 100}%`; d.style.width = `${(s.to - s.from) / dur * 100}%`;
+    d.textContent = s.name; d.title = s.name;
+    tl.insertBefore(d, $('wave'));
+  });
+  brief.lines.forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'lyric';
+    d.style.left = `${l.from / dur * 100}%`; d.style.width = `${(l.to - l.from) / dur * 100}%`;
+    tl.insertBefore(d, $('wave'));
+  });
+  const set = e => { const r = tl.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * (v.duration || dur), false); };
+  tl.onpointerdown = e => { tl.setPointerCapture(e.pointerId); set(e); tl.onpointermove = set; };
+  tl.onpointerup = () => { tl.onpointermove = null; };
+}
+
+async function waveform() {
+  const a = await json(`${base}music/${brief.take}.analysis.json`);
+  const c = $('wave').getContext('2d'), W = 1200, H = 50;
+  const per = a.level.length / W;
+  c.fillStyle = '#8a8478';
+  for (let x = 0; x < W; x++) {
+    const h = a.level[Math.floor(x * per)] * H;
+    c.fillRect(x, H - h, 1, h);
+  }
+  c.fillStyle = '#c4442a';
+  a.beats.forEach(b => c.fillRect(b / (a.level.length / a.fps) * W, H - 5, 1, 5));
+}
+
+async function clips() {
+  const box = $('clips');
+  const players = [];
+  // A film with several heroes lists their folders in review.json.
+  for (const hero of review.heroes || ['hero']) {
+  const jobs = await json(`${base}${hero}/jobs.json`);
+  for (const [name, job] of Object.entries(jobs)) {
+    const meta = await json(`${base}${hero}/sprites/${name}.json`);
+    const im = new Image();
+    im.src = `${base}${hero}/sprites/${name}.png`;
+    await im.decode();
+    const el = document.createElement('div');
+    el.className = 'clip';
+    el.innerHTML = `<h3>${esc(hero === 'hero' ? '' : hero.replace('hero_', '') + ': ')}${esc(name.replace('_', ' '))}</h3><canvas width="${meta.size}" height="${meta.size}"></canvas><div class="quiet">${meta.count} frames, ${meta.size} px. Source clip: ${esc(job.clip)}.</div>`;
+    box.appendChild(el);
+    players.push({ c: el.querySelector('canvas'), im, meta, f: -1 });
+  }
+  }
+  let rate = 1;
+  document.querySelectorAll('.crate').forEach(b => b.onclick = () => { rate = +b.dataset.rate; document.querySelectorAll('.crate').forEach(x => x.classList.toggle('on', x === b)); });
+  document.querySelectorAll('.cbg').forEach(b => b.onclick = () => { box.style.setProperty('--bg', b.dataset.bg); document.querySelectorAll('.cbg').forEach(x => x.classList.toggle('on', x === b)); });
+  let last = performance.now(), clock = 0;
+  (function run(now) {
+    clock += (now - last) / 1000 * rate; last = now;
+    if (!$('view-clips').hidden) players.forEach(p => {
+      const f = Math.floor(clock * p.meta.fps) % p.meta.count;
+      if (f === p.f) return;
+      p.f = f;
+      const x = p.c.getContext('2d');
+      x.clearRect(0, 0, p.meta.size, p.meta.size);
+      x.drawImage(p.im, 0, f * p.meta.size, p.meta.size, p.meta.size, 0, 0, p.meta.size, p.meta.size);
+    });
+    requestAnimationFrame(run);
+  })(last);
+}
+
+function subs() {
+  $('subs').innerHTML = brief.lines.map((l, i) => `<tr data-i="${i}"><td>${fmt(l.from).slice(0, 7)}</td><td class="ja">${esc(l.ja)}</td><td>${esc(l.id)}</td></tr>`).join('');
+  $('subs').querySelectorAll('tr').forEach(r => r.onclick = () => {
+    showView('watch');
+    seek(brief.lines[+r.dataset.i].from - 0.3, false);
+    setRate(1);
+    v.play();
+  });
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(s => { s.hidden = s.id !== `view-${name}`; });
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.view === name));
+  if (name !== 'watch') v.pause();
+}
+
+function wire() {
+  v.onplay = v.onpause = () => { $('play').textContent = v.paused ? 'Play' : 'Pause'; };
+  v.onloadedmetadata = renderNotes;
+  $('play').onclick = togglePlay;
+  $('back').onclick = () => step(-1);
+  $('next').onclick = () => step(1);
+  document.querySelectorAll('.rate').forEach(b => b.onclick = () => setRate(+b.dataset.rate));
+  $('occ').onclick = () => { showOcc = toggle('occ'); };
+  $('grid').onclick = () => { showGrid = toggle('grid'); };
+  $('phone').onclick = () => { $('stage').classList.toggle('phone', toggle('phone')); };
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => showView(b.dataset.view));
+  document.querySelectorAll('.zoom').forEach(b => b.onclick = () => { zoomSrc = +b.dataset.z; document.querySelectorAll('.zoom').forEach(x => x.classList.toggle('on', x === b)); });
+  const pos = e => { const r = $('stage').getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * G, y: (e.clientY - r.top) / r.height * G }; };
+  $('stage').onpointermove = e => { if (!held) lensAt = pos(e); };
+  $('stage').onclick = e => { held = !held; lensAt = pos(e); };
+  $('save').onclick = () => {
+    const text = $('note').value.trim();
+    if (!text) return;
+    notes.push({ t: +v.currentTime.toFixed(2), frame: Math.round(v.currentTime * FPS), scene: sceneAt(v.currentTime).name, text });
+    $('note').value = '';
+    saveNotes();
+  };
+  $('note').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') $('save').click(); });
+  addEventListener('keydown', e => {
+    if (/TEXTAREA|SELECT/.test(e.target.tagName) || $('view-watch').hidden) return;
+    const k = e.key.toLowerCase();
+    if (k === ' ') { e.preventDefault(); togglePlay(); }
+    else if (k === 'arrowleft') step(e.shiftKey ? -10 : -1);
+    else if (k === 'arrowright') step(e.shiftKey ? 10 : 1);
+    else if (k === 'o') $('occ').click();
+    else if (k === 'g') $('grid').click();
+    else if (k === 'p') $('phone').click();
+    else if (k === 'n') { e.preventDefault(); v.pause(); $('note').focus(); }
+  });
+}
+
+const fail = e => { document.querySelector('main').innerHTML = `<p class="err">The canvas failed to load. ${esc(e.message)}</p>`; };
+
+(async () => {
+  if (!film) {
+    const films = await json('/api/films');
+    if (films.length === 1) { location.search = `?film=${films[0]}`; return; }
+    document.querySelector('main').innerHTML = `<h2>Choose a film</h2>${films.map(f => `<p><a href="?film=${encodeURIComponent(f)}">${esc(f)}</a></p>`).join('')}`;
+    return;
+  }
+  [brief, review] = await Promise.all([json(`${base}brief.json`), json(`${base}review.json`)]);
+  scenes = review.scenes;
+  $('title').textContent = `${brief.title} review`;
+  document.title = `${brief.id} review`;
+  if (brief.sub_label) document.getElementById("sublabel").textContent = brief.sub_label;
+  notes = await fetch(`${base}review/notes.json`).then(r => r.ok ? r.json() : []).catch(() => []);
+  const occ = await json(`${base}occluders.json`).catch(() => ({}));
+  wire(); subs(); renderNotes();
+  (function loop() { tick(); requestAnimationFrame(loop); })();
+  await Promise.all(Object.entries(occ).map(([p, items]) => loadOcc(p, items)));
+  const metadata = new Promise(r => v.addEventListener('loadedmetadata', r, { once: true }));
+  await loadVideo(`${brief.id}_mv.mp4`);
+  await metadata;
+  // The renderer adds the studio credit after the last scene.
+  const lastTo = scenes[scenes.length - 1].to;
+  if (v.duration > lastTo + 0.5) scenes.push({ name: 'End card', from: lastTo, to: v.duration, plate: null, night: false });
+  timeline(); renderNotes();
+  await Promise.all([waveform(), clips().catch(() => { $('clips').innerHTML = '<p class="quiet">The film has no baked clips.</p>'; })]);
+})().catch(fail);
+</script>
+</body>
+</html>

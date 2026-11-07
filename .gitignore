@@ -1,0 +1,6 @@
+mvs/*/build/
+output/
+__pycache__/
+*.blend1
+.env
+.mini-mv-export

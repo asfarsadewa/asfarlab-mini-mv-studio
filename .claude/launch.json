@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "review",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/review_server.py", "5350"],
+      "port": 5350
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "id": "noroshi",
+  "title": "のろし",
+  "grid": 360,
+  "fps": 30,
+  "paper": [
+    251,
+    249,
+    245
+  ],
+  "min_seconds": 60,
+  "year": 2026,
+  "approved": "2026-11-05",
+  "take": "take_a",
+  "plate": "plates/island-360.png",
+  "test": {
+    "start": 31.5,
+    "end": 41.5
+  },
+  "full": {
+    "start": 0,
+    "end": 65.4
+  },
+  "hit": 36.6,
+  "lines": [
+    {
+      "from": 16.04,
+      "to": 20.6,
+      "ja": "灰の町で 息をひそめて",
+      "id": "Di kota abu, kutahan napasku"
+    },
+    {
+      "from": 22.84,
+      "to": 27.6,
+      "ja": "消えない火を 胸に隠した",
+      "id": "Api yang tak padam, kusimpan di dada"
+    },
+    {
+      "from": 29.72,
+      "to": 31.1,
+      "ja": "風が変わる",
+      "id": "Angin berbalik"
+    },
+    {
+      "from": 31.26,
+      "to": 32.7,
+      "ja": "夜が割れる",
+      "id": "Malam terbelah"
+    },
+    {
+      "from": 32.96,
+      "to": 36.1,
+      "ja": "ひとりでいい 手を伸ばせ",
+      "id": "Sendiri pun tak apa, ulurkan tanganmu"
+    },
+    {
+      "from": 36.58,
+      "to": 38.5,
+      "ja": "のろしを上げろ",
+      "id": "Nyalakan suar itu"
+    },
+    {
+      "from": 38.9,
+      "to": 40.15,
+      "ja": "空の果てまで",
+      "id": "Sampai ke ujung langit"
+    },
+    {
+      "from": 40.22,
+      "to": 43.1,
+      "ja": "届くまで 僕は叫ぶ",
+      "id": "Aku berseru sampai terdengar"
+    },
+    {
+      "from": 43.24,
+      "to": 45.05,
+      "ja": "のろしを上げろ",
+      "id": "Nyalakan suar itu"
+    },
+    {
+      "from": 45.18,
+      "to": 47.4,
+      "ja": "誰かの夜に",
+      "id": "Ke dalam malam seseorang"
+    },
+    {
+      "from": 47.48,
+      "to": 50.05,
+      "ja": "この火を 繋いでゆけ",
+      "id": "Teruskan api ini"
+    },
+    {
+      "from": 50.1,
+      "to": 51.8,
+      "ja": "のろしを上げろ",
+      "id": "Nyalakan suar itu"
+    },
+    {
+      "from": 52.0,
+      "to": 53.65,
+      "ja": "空の果てまで",
+      "id": "Sampai ke ujung langit"
+    },
+    {
+      "from": 53.72,
+      "to": 56.8,
+      "ja": "届くまで 僕は叫ぶ",
+      "id": "Aku berseru sampai terdengar"
+    },
+    {
+      "from": 56.96,
+      "to": 58.7,
+      "ja": "のろしを上げろ",
+      "id": "Nyalakan suar itu"
+    },
+    {
+      "from": 58.9,
+      "to": 61.1,
+      "ja": "誰かの夜に",
+      "id": "Ke dalam malam seseorang"
+    },
+    {
+      "from": 61.24,
+      "to": 64.0,
+      "ja": "この火を 繋いでゆけ",
+      "id": "Teruskan api ini"
+    }
+  ],
+  "takes": {
+    "take_a": "Original modern Japanese pop-rock anthem, heroic and urgent, about 60 seconds, 148 BPM, minor key that lifts to major in the chorus. Sung in Japanese by one male tenor: close, restless and low in the verse, then a huge soaring chorus with bright high notes and doubled harmonies. Instruments: an angular syncopated piano riff, tight funky electric bass, crisp live drums, sharp clean electric guitar, a sweeping string section in the chorus. Structure: 2 bar piano riff intro, verse, a rising pre-chorus with a drum fill and one beat of silence, then a full band chorus that hits hard on the first beat. End on the final chorus chord.",
+    "take_b": "Original contemporary J-pop anthem with a cinematic, heroic lift, about 60 seconds, 152 BPM. One male lead vocal in Japanese with an expressive, slightly husky tone, intimate in the verse and wide open in the chorus. Off-kilter syncopated rhythm section, playful piano and guitar interplay, rubbery bass, tight live drums, then soaring strings and stacked vocal harmonies in the chorus. Structure: short intro, verse, a pre-chorus that climbs and stops dead for one beat, then a powerful chorus with a memorable rising melody. End on the final chorus chord."
+  },
+  "lyrics": "[Verse]\n灰の町で 息をひそめて\n消えない火を 胸に隠した\n\n[Pre-Chorus]\n風が変わる 夜が割れる\nひとりでいい 手を伸ばせ\n\n[Chorus]\nのろしを上げろ 空の果てまで\n届くまで 僕は叫ぶ\nのろしを上げろ 誰かの夜に\nこの火を 繋いでいけ"
+}
