@@ -4,7 +4,7 @@
 #   blender --background --python tools/hero.py -- bake <hero_dir> <job.json>
 # A job holds: clip, out, ppu, azimuth, elevation, cloth, torch, wind [x, y], gust, frames [start, end], step, canvas, tint.
 import json, math, os, sys
-import bpy
+import bmesh, bpy
 from mathutils import Matrix, Vector
 
 SCALE_REF_HIP = 1.043  # Hip height of the PINOC rig.
@@ -239,6 +239,31 @@ def rig_cmd(root):
     hero.matrix_world = Matrix.Translation((0, 0, 0.5 * S)) @ Matrix.Rotation(math.radians(-90), 4, "Z") @ Matrix.Scale(S, 4)
     sel(hero)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    # outfit.json "drop_rings" removes loose rings above the shoulders. A generated hat brim can come out as a ring that floats free of the hat.
+    # A loose part goes if it lies above the shoulders and does not reach the middle of the head.
+    if outfit_of(root).get("drop_rings"):
+        bm = bmesh.new()
+        bm.from_mesh(hero.data)
+        seen, drop = set(), []
+        for start in bm.verts:
+            if start in seen:
+                continue
+            part, stack = [], [start]
+            seen.add(start)
+            while stack:
+                v = stack.pop()
+                part.append(v)
+                for e in v.link_edges:
+                    w = e.other_vert(v)
+                    if w not in seen:
+                        seen.add(w)
+                        stack.append(w)
+            if min(v.co.z for v in part) > 0.78 * S and min(math.hypot(v.co.x, v.co.y) for v in part) > 0.08 * S:
+                drop += part
+        bmesh.ops.delete(bm, geom=drop, context="VERTS")
+        bm.to_mesh(hero.data)
+        bm.free()
+        print("DROP_RINGS", json.dumps({"vertices": len(drop)}))
 
     # Move the joints into the hero. Each bone keeps its direction, so clip rotations keep their meaning.
     sel(rig)
@@ -290,6 +315,15 @@ def rig_cmd(root):
         remesh.use_smooth_shade = True
         sel(solver)
         bpy.ops.object.modifier_apply(modifier=remesh.name)
+        # A wide hat brim can stop bone heat. outfit.json "solver_cap" drops solver parts above that fraction of the height.
+        # The hat then takes the weights of the nearest solved surface, which is the head.
+        cap = outfit_of(root).get("solver_cap")
+        if cap:
+            bm = bmesh.new()
+            bm.from_mesh(solver.data)
+            bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z > cap * S], context="VERTS")
+            bm.to_mesh(solver.data)
+            bm.free()
         sel(rig, solver)
         bpy.context.view_layer.objects.active = rig
         bpy.ops.object.parent_set(type="ARMATURE_AUTO")
@@ -319,6 +353,38 @@ def rig_cmd(root):
     bpy.ops.object.vertex_group_normalize_all(lock_active=False)
     bpy.data.objects.remove(solver)
     clean_weights(hero, S)
+    # outfit.json "arm_split" weights the arms by their place along the T-pose. Use it when bone heat leaves a forearm unweighted.
+    # Without it such a forearm follows the upper arm, and the whole arm swings as one stiff plank.
+    if outfit_of(root).get("arm_split"):
+        def ramp(a, lo, hi):
+            return min(max((a - lo) / (hi - lo), 0.0), 1.0)
+        split_count = 0
+        for side, sign in (("Left", 1), ("Right", -1)):
+            groups = [hero.vertex_groups.get(PFX + side + n) for n in ("Arm", "ForeArm", "Hand")]
+            for v in hero.data.vertices:
+                x = v.co.x * sign / S
+                if x < 0.13 or not 0.68 < v.co.z / S < 0.84:
+                    continue
+                fore, hand = ramp(x, 0.23, 0.27), ramp(x, 0.345, 0.385)
+                weights = (1 - fore, fore * (1 - hand), hand)
+                for g in hero.vertex_groups:
+                    g.remove([v.index])
+                for g, w in zip(groups, weights):
+                    if w > 0:
+                        g.add([v.index], w, "REPLACE")
+                split_count += 1
+        print("ARM_SPLIT", json.dumps({"vertices": split_count}))
+    # outfit.json "head_lock" binds every part above that fraction of the height, and inside the shoulders, to the head alone.
+    # A wide hat brim then moves as one rigid piece. Without it the brim can stretch to the shoulders or an arm.
+    lock = outfit_of(root).get("head_lock")
+    if lock:
+        head = hero.vertex_groups.get(PFX + "Head")
+        locked = [v.index for v in hero.data.vertices if v.co.z > lock * S and abs(v.co.x) < 0.3 * S]
+        for g in hero.vertex_groups:
+            if g != head:
+                g.remove(locked)
+        head.add(locked, 1.0, "REPLACE")
+        print("HEAD_LOCK", json.dumps({"vertices": len(locked)}))
     counts = [0] * len(hero.data.vertices)
     for v in hero.data.vertices:
         counts[v.index] = sum(1 for g in v.groups if g.weight > 0.01)
