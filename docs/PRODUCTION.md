@@ -171,6 +171,8 @@ Measure the door and one storey on each plate. Choose the `ppu` for each plate f
 
 ## Step 6: Build the character
 
+Run `python tools/catalog.py`, then read `docs/CATALOG.md`. It lists every model and motion clip in your films, with a contact sheet. Reuse a model or a clip when it fits. Build a new one only when nothing fits. After each approved film, add the look line of each new model to `tools/catalog_looks.json`. Then run `python tools/catalog.py`.
+
 Paint a concept with Sunburst. It must show a clean T-pose, from the front, with arms and legs clear of the body. Keep out cloaks, scarves and held items, because cloth and props come later.
 
 ```bash
@@ -455,6 +457,13 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A walk ends too early after the song | `beat()` snaps a time to the nearest beat. The beats stop when the music stops. A time in the outro then snaps back to the last beat. Use a set time after the last beat. See `T_QUAY` in `examples/film_code/hitomose.py` |
 | A climber walks behind a building | Do not read stair points off a grid by eye. Draw the path on the plate at 3 times scale, and check that each point sits on a step. Then read the climb in a strip |
 | A light source sits beside its lamp | Zoom on the lamp at 14 times. Use the brightest lamp pixel as the beam origin |
+| A mirror shows the backs of the dancers | Dancers face the mirror, so the camera sees their backs. Bake each dance twice: from behind for the room and from the front for the mirror. Draw the front view flipped left to right. Set its feet at twice the mirror floor row minus the feet row. Clip it to the glass, and draw it before the bodies. See `reflect` in `examples/film_code/geoul.py` |
+| A formation reads as a flat line | The 30 degree view halves depth. Give a V at least 25 rows from the point to the wings, and read it in a strip |
+| A walker appears out of a wall | A lane that turns behind a building is the place to enter. Trace the occluder to the true edge of the building, and start the walker behind it. The building then reveals him. Do not fade a walker in at the end of a lane. See `CORNER` in `examples/film_code/geoul.py` |
+| People vanish where they gather | A loose box around an object also covers the ground behind it. Each person who stands in that box disappears. Trace the outline tight to the object, and turn off `refine` if it stays loose. Read the strip where the people stop |
+| A person stands on a table | A painted table can touch the wall behind it with no floor between them. A spot at that wall puts the feet above the table top. Check that free floor shows between the object and the wall. If no floor shows, move the code prop to a place where the person can stand |
+| A pushed prop vanishes at phone size | At true scale a hand cart is a few pixels on a wide plate. Bake the prop about 1.5 times its true size. Darken its outline. See `examples/film_code/zaizou_bake_cart.py` |
+| A small story beat does not read | A phone or a letter is a few pixels in a wide shot. Cut to a close-up plate for the beat, and draw the change in code. See `close_up` in `examples/film_code/zaizou.py` |
 | People look tiny next to the props | Do not guess `ppu`. Measure a prop of known height on each plate: a door is 2 m, a desk is 0.75 m, a phone box is about 2 m. A person is about 1.7 m. Run the proof against that prop. Close-up rooms show this most, because their furniture is painted large. Several earlier films have people that are too small in close rooms |
 | Blinking bulbs also catch windows and roof tiles | A colour test alone finds lit windows and tile highlights. Keep only small isolated lights inside the band where the strings hang. Pulse their brightness, and keep their colour. See `bulbs` in `examples/film_code/kirimsalam.py` |
 | Bright snow turns into paper | The usual paper test also catches bright pixels inside the island. Count pale pixels as paper only where they connect to the frame edge. See `plate` in `examples/film_code/haojiao.py` |
