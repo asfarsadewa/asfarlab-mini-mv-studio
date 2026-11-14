@@ -44,7 +44,7 @@ missing = [m["home"] for m in models if not m["look"]]
 
 # Motion clips: one group per file content. Several names can share one clip.
 clips = defaultdict(lambda: {"names": set(), "paths": []})
-for glb in sorted(glob.glob("mvs/*/hero/motions/*.glb")):
+for glb in sorted(glob.glob("mvs/*/*/motions/*.glb")):
     c = clips[md5(glb)]
     c["names"].add(Path(glb).stem)
     c["paths"].append(Path(glb).as_posix())
@@ -95,7 +95,7 @@ lines += [
     "",
     "## Reuse a motion clip",
     "",
-    "A clip lives at `mvs/<film>/hero/motions/<clip>.glb` in each film that the table names. Copy it into `hero/motions/` of the new film. Bake it on the new cast.",
+    "A clip lives at `mvs/<film>/<cast>/motions/<clip>.glb` in each film that the table names. The cast folder can be `hero` or another cast member. Copy the clip into `hero/motions/` of the new film. Bake it on the new cast.",
     "",
     "A clip with several names is one file under each name.",
     "",

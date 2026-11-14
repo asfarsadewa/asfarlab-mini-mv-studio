@@ -37,7 +37,7 @@ UI text, captions, credits, README and these notes follow the ASD-STE100 registe
 | Word timings | ElevenLabs `scribe_v2` | Key: `ELEVENLABS_API_KEY` |
 | Generic crowd | A second Tripo model and a tinted copy of the hero body, with `outfit: false` |
 | Character | `tripo3d/p2/image-to-3d` on fal | Key: `FAL_AI_KEY` |
-| Motion | PINOC connector, tools named `mcp__viggle__*` | Library clips are free. Generation costs 1 credit per second |
+| Motion | PINOC connector, tools named `mcp__pinoc__*` | Library clips are free. Generation costs 1 credit per second |
 | Rig, cloth, bake | Blender 5.2 in background mode | Set `BLENDER` if the program is not on PATH |
 | Encoding | ffmpeg | The render uses libx264 |
 | Review | `tools/review/index.html` | Served by `tools/review_server.py` |
@@ -417,9 +417,13 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | Parallel shell calls change the folder | Use absolute paths, or `cd` in the same command |
 | Whisper can hang on long music | Use Scribe |
 | A transcript has no spaces or wrong words | `transcribe.py` reads Japanese by default. Pass `--lang`, such as `--lang ind`. Delete the old `.words.json` first, because the tool reuses it |
+| A song prompt names an odd meter, but the recording may use another | Tempo and generated text do not prove meter. Compare recurring accents and get a listening check before visual production |
+| Blender rejects render paths in sandbox temp folders | Set `TEMP` and `TMP` to a film-local `build/` folder for Blender subprocesses |
+| A large Chinese caption is cut off | Check glyph height as well as width. Give both subtitle lines enough vertical space |
 | Lyria rushes the lyrics and leaves a long instrumental end | A fast tempo crams the words. Ask for one lyric line every 2 bars. Compare the last sung word with the song length |
 | Lyria blocks a harmless style prompt and names no word | The block can be random. `lyria.py` retries once. If it fails twice, reword the style text |
 | Cloth floats up over the head in still air | Set `wind_z` to 0 in the job. The default lift beats gravity at low wind |
+| Cloth pins sit beside the body | Bone points are in rig space. Use `rig.matrix_world` to put each pin in world space before binding the cloth |
 | A generated concept has a dark or glowing background | Check the concept before Tripo. The Serment townsperson came back on black with a glow. The model was still clean. Read it from all sides before you repaint |
 | A caption is too wide | At 16 pixels, a Latin line holds about 43 characters. Split a long line at a breath in the singing. `Captions` stops on a line that does not fit |
 | A sprite looks grey or washed out | One large colour takes most of a small palette. `bake_sprites.py` now keeps 28 to 40 colours. Check skin and hair after each new outfit |
@@ -451,7 +455,9 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A prompt asks for a Javanese song | Lyria sings Javanese. Use `transcribe.py --lang jav` |
 | A rising flood reads as a wipe | Give each pixel the flood progress at which water reaches it. Low ground goes first, shallow water is a dithered mirror, and foam marks the moving edge. See `flood_map` in `examples/film_code/damar.py` |
 | One person in a hug vanishes | A hug clip steps forward into the embrace. Two people placed close together end up on the same spot. The nearer one then hides the other. Start them about 40 pixels apart at 18 `ppu`. Zoom on the frame |
-| A looping walker reads as frozen | The frozen check remembers the last frame at each screen spot. A walker that loops a path passes the same spot on the same frame each lap. The check then counts the laps as one long hold. Shift each lap a few pixels to the side. See `strollers` in `examples/film_code/ngenteni.py` |
+| A returning walker or dancer reads as frozen | The frozen check remembers the last frame at each screen spot. It can count separate visits as one hold. Keep a spot's history only when that spot appears in both the current film frame and the preceding frame. A continuous hold must still fail the check |
+| A second cast member's motion is missing from the catalog | Scan `mvs/*/*/motions/*.glb`, so that the catalog includes clips from every cast folder |
+| Extra sprite metadata vanishes on a new bake | Put playback choices in `film.py` or `jobs.json`. Do not keep them only in the generated sprite JSON |
 | A seated person reads as standing | A sit clip that faces the camera points the thighs at the lens. The legs then look straight. Bake the sit from a side angle, such as azimuth 300. Put the person on the seat. Read the bench in a strip |
 | A vehicle reads as a flat cut-out | A painted vehicle that slides along a road looks pasted on. Build it with Tripo, and bake it with the camera, sun and `ppu` of the people. Bake drive, brake and idle frames. Draw people behind it before it. Draw people in front of it after it. See `examples/film_code/ngenteni_bake_bus.py` |
 | A walk ends too early after the song | `beat()` snaps a time to the nearest beat. The beats stop when the music stops. A time in the outro then snaps back to the last beat. Use a set time after the last beat. See `T_QUAY` in `examples/film_code/hitomose.py` |
