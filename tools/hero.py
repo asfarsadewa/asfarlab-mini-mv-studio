@@ -159,6 +159,12 @@ def outfit_of(root):
     return {"cloak": (0.10, 0.12, 0.20), "scarf": (0.62, 0.05, 0.03), **custom}
 
 
+def use_joints(root):
+    """outfit.json "joints" overrides rows of the JOINTS table, for a model with other proportions, such as a child."""
+    for name, value in outfit_of(root).get("joints", {}).items():
+        JOINTS[name] = tuple(value)
+
+
 def add_bow(rig, hand_world, material_):
     """A bow is an arc in the XZ plane. Its belly points along the arm, so it stands upright in a raised hand."""
     curve = bpy.data.curves.new("BowCurve", "CURVE")
@@ -219,6 +225,7 @@ def paint_spots(count, radius, rgb=(0.72, 0.03, 0.04)):
 
 
 def rig_cmd(root):
+    use_joints(root)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=motion_path(root, "idle"))
     rig = next(o for o in bpy.data.objects if o.type == "ARMATURE")
@@ -613,6 +620,7 @@ def load_clip(root, clip, rig, S):
 
 
 def bake_cmd(root, job_path):
+    use_joints(root)
     job = json.load(open(job_path, encoding="utf-8"))
     bpy.ops.wm.open_mainfile(filepath=f"{root}/hero.blend")
     scene = bpy.context.scene
