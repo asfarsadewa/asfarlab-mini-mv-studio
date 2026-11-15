@@ -173,6 +173,26 @@ STUDIO_LINE = "Generated in Mini MV Studio"
 STUDIO_HANDLE = studio_handle()
 
 
+def title_mask(brief, size, x=18, y=22):
+    """The opening title card as a mask: the title, then the Chinese and Indonesian titles if the brief has them,
+    then the time and place, such as "Tokyo, 1985". The film draws it in ink and fades it with the title."""
+    m = Image.new("L", (size, size), 0)
+    d = ImageDraw.Draw(m)
+    d.fontmode = "1"
+    rows = [(brief["title"], ImageFont.truetype(font_path("msgothic.ttc"), 16), 18)]
+    if brief.get("title_zh"):
+        rows.append((brief["title_zh"], ImageFont.truetype(font_path("msyh.ttc"), 14), 20))
+    if brief.get("title_id"):
+        rows.append((brief["title_id"], ImageFont.truetype(font_path("msgothic.ttc"), 12), 16))
+    if brief.get("place"):
+        y += 4
+        rows.append((brief["place"], ImageFont.truetype(font_path("msgothic.ttc"), 12), 16))
+    for text, font, step in rows:
+        d.text((x, y), text, font=font, fill=255)
+        y += step
+    return np.asarray(m) > 0
+
+
 def end_card(size, paper, year):
     """The studio credit that closes every film. render.py adds it after the song. A film must not draw its own."""
     im = Image.new("RGB", (size, size), tuple(int(v) for v in paper))

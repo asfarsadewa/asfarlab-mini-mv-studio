@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lyric Review</title>
+<style>
+  :root {
+    --paper: #fbf9f5; --ink: #18161c; --soft: #6c675f; --line: #ddd8cd; --panel: #f2eee6;
+    --ember: #c4442a; --fire: #e87a24; --ok: #2e7a3c; --add: #d9eed9; --del: #f6d6cf;
+    --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.45 var(--mono); }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { background: var(--paper); border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; border-radius: 0; }
+  button:hover { background: var(--panel); }
+  button.on { background: var(--ink); color: var(--paper); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--fire); outline-offset: 1px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; padding: 12px 16px; border-bottom: 1px solid var(--ink); position: sticky; top: 0; background: var(--paper); z-index: 2; }
+  h1 { margin: 0; font-size: 15px; }
+  h2 { margin: 18px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); font-weight: 600; }
+  .progress { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .bar { width: 160px; height: 8px; background: var(--panel); border: 1px solid var(--line); }
+  .bar i { display: block; height: 100%; background: var(--ok); width: 0; }
+  main { padding: 14px 16px 60px; max-width: 1100px; }
+  .card { border: 1px solid var(--line); padding: 10px; background: #fff8; margin-bottom: 12px; }
+  .card p { margin: 0 0 6px; }
+  .quiet { color: var(--soft); font-size: 11px; }
+  .line { display: grid; grid-template-columns: 32px 1fr 210px; gap: 4px 12px; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  @media (max-width: 760px) { .line { grid-template-columns: 28px 1fr; } .line .acts { grid-column: 2; } }
+  .num { color: var(--soft); font-variant-numeric: tabular-nums; padding-top: 5px; }
+  .src { font-size: 15px; }
+  .gloss { color: var(--soft); }
+  .note { font-size: 12px; }
+  .flag { color: var(--ember); font-weight: 700; }
+  input.edit { width: 100%; border: 1px solid var(--line); background: var(--paper); padding: 5px 6px; font-size: 15px; margin: 4px 0; }
+  input.edit.changed { border-color: var(--fire); background: #fff7ee; }
+  .diff { font-size: 13px; min-height: 1em; }
+  .diff ins { background: var(--add); text-decoration: none; padding: 0 2px; }
+  .diff del { background: var(--del); padding: 0 2px; }
+  .acts { display: flex; flex-direction: column; gap: 4px; }
+  .acts .row { display: flex; gap: 4px; }
+  .acts button { flex: 1; }
+  .acts button.keep.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .acts button.keep.implicit { border-style: dashed; color: var(--ok); }
+  .acts button.chg.on { background: var(--fire); border-color: var(--fire); color: #fff; }
+  textarea { width: 100%; min-height: 34px; border: 1px solid var(--line); background: var(--paper); padding: 5px; resize: vertical; display: block; }
+  .repeat { color: var(--soft); font-size: 11px; }
+  .line.repeatline .src, .line.repeatline input { opacity: .6; }
+  .foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+  .approved { color: var(--ok); font-weight: 700; }
+  .saved { color: var(--soft); font-size: 11px; }
+  .err { padding: 16px; color: var(--ember); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Lyric review</h1>
+  <span class="quiet" id="lang"></span>
+  <div class="progress"><span id="count"></span><span class="saved" id="saved"></span></div>
+</header>
+<main>
+  <div class="card" id="brief"></div>
+  <p class="quiet">Review by exception. A line that you leave alone keeps the draft. To change a line, edit it in its box: the edit is the change, and a word diff shows it. To ask for a new version without your own words, press Change and add a comment. A chorus repeat follows its first line. The page saves as you type.</p>
+  <div id="lines"></div>
+  <h2>General note</h2>
+  <textarea id="general" placeholder="Anything about the whole lyric: register, tone, a word to avoid."></textarea>
+  <div class="foot">
+    <button id="approve">Approve the lyrics</button>
+    <span id="state"></span>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const film = new URLSearchParams(location.search).get('film');
+let draft, review = { lines: {}, general: '', approved: null };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// Manage by exception: an edited line is a change. Change with no edit asks for a rework. Anything else keeps the draft.
+function effective(line) {
+  const e = entry(line), src = own(line).text.trim();
+  if (e.text.trim() !== src) return 'change';
+  return e.status === 'change' ? 'rework' : 'keep';
+}
+
+// A word diff: the longest common subsequence of words, marked as deletions and insertions.
+function diff(a, b) {
+  const x = a.split(/\s+/).filter(Boolean), y = b.split(/\s+/).filter(Boolean);
+  const m = x.length, n = y.length, L = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--) for (let j = n - 1; j >= 0; j--) L[i][j] = x[i] === y[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while (i < m && j < n) {
+    if (x[i] === y[j]) { out.push(esc(x[i])); i++; j++; }
+    else if (L[i + 1][j] >= L[i][j + 1]) out.push(`<del>${esc(x[i++])}</del>`);
+    else out.push(`<ins>${esc(y[j++])}</ins>`);
+  }
+  while (i < m) out.push(`<del>${esc(x[i++])}</del>`);
+  while (j < n) out.push(`<ins>${esc(y[j++])}</ins>`);
+  return out.join(' ');
+}
+
+const allLines = () => draft.sections.flatMap(s => s.lines);
+const own = line => line.same_as ? allLines().find(l => l.id === line.same_as) : line;
+const entry = line => (review.lines[own(line).id] ??= { text: own(line).text, status: '', comment: '' });
+
+let timer;
+function save() {
+  clearTimeout(timer);
+  $('saved').textContent = 'Saving';
+  timer = setTimeout(async () => {
+    const r = await fetch(`/api/lyrics/${film}`, { method: 'POST', body: JSON.stringify(review) });
+    $('saved').textContent = r.ok ? 'Saved' : `Not saved: ${r.status}`;
+  }, 400);
+}
+
+function progress() {
+  const first = allLines().filter(l => !l.same_as);
+  const changed = first.filter(l => effective(l) === 'change').length;
+  const rework = first.filter(l => effective(l) === 'rework').length;
+  const comments = first.filter(l => entry(l).comment.trim()).length;
+  $('count').textContent = `${changed} changed, ${rework} to rework, ${comments} comments. The other lines keep the draft.`;
+  $('state').innerHTML = review.approved ? `<span class="approved">Approved ${esc(review.approved)}</span>` : 'Not approved yet.';
+}
+
+function paintLine(el, line) {
+  const e = entry(line), src = own(line).text;
+  const input = el.querySelector('input'); if (document.activeElement !== input) input.value = e.text;
+  input.classList.toggle('changed', e.text.trim() !== src.trim());
+  el.querySelector('.diff').innerHTML = e.text.trim() !== src.trim() ? diff(src, e.text) : '';
+  // A repeat line has no buttons. It shows its first line's text and diff.
+  const state = effective(line);
+  el.querySelector('.keep')?.classList.toggle('on', state === 'keep' && e.status === 'keep');
+  el.querySelector('.keep')?.classList.toggle('implicit', state === 'keep' && e.status !== 'keep');
+  el.querySelector('.chg')?.classList.toggle('on', state !== 'keep');
+  const c = el.querySelector('textarea'); if (c && document.activeElement !== c) c.value = e.comment;
+}
+
+function render() {
+  $('title').textContent = `${draft.title} lyric review`;
+  document.title = `${draft.title} lyrics`;
+  $('lang').textContent = `${draft.language}, glossed in ${draft.gloss_language}`;
+  $('brief').innerHTML = `<p><b>Story.</b> ${esc(draft.story)}</p><p><b>Style.</b> ${esc(draft.style)}</p>`;
+  const box = $('lines'); box.innerHTML = '';
+  for (const sec of draft.sections) {
+    box.insertAdjacentHTML('beforeend', `<h2>${esc(sec.label)}</h2>`);
+    for (const line of sec.lines) {
+      const rep = !!line.same_as, first = own(line);
+      const el = document.createElement('div');
+      el.className = 'line' + (rep ? ' repeatline' : '');
+      el.innerHTML = `<div class="num">${esc(line.id)}</div>
+        <div>
+          <div class="src">${esc(first.text)}${first.flag ? ` <span class="flag" title="${esc(first.flag)}">⚑</span>` : ''}</div>
+          <input class="edit" ${rep ? 'disabled' : ''} aria-label="Correction for line ${esc(line.id)}">
+          <div class="diff"></div>
+          <div class="gloss">${esc(first.gloss)}</div>
+          ${first.note || first.flag ? `<div class="note">${first.flag ? `<span class="flag">⚑ ${esc(first.flag)}</span> ` : ''}${esc(first.note || '')}</div>` : ''}
+          ${rep ? `<div class="repeat">Repeats line ${esc(line.same_as)}. Edit it there.</div>` : ''}
+        </div>
+        <div class="acts">${rep ? '' : `<div class="row"><button class="keep">Keep</button><button class="chg">Change</button></div>
+          <textarea placeholder="Comment"></textarea>`}</div>`;
+      box.appendChild(el);
+      line._el = el;
+      if (!rep) {
+        const e = entry(line);
+        el.querySelector('input').addEventListener('input', ev => {
+          e.text = ev.target.value;
+          e.status = e.text.trim() !== first.text.trim() ? 'change' : (e.status === 'change' ? '' : e.status);
+          review.approved = null; refresh(); save();
+        });
+        el.querySelector('input').addEventListener('keydown', ev => {
+          if (ev.key !== 'Enter') return;
+          const next = allLines().filter(l => !l.same_as); const k = next.indexOf(line);
+          if (next[k + 1]) next[k + 1]._el.querySelector('input').focus();
+        });
+        el.querySelector('.keep').onclick = () => { e.status = 'keep'; e.text = first.text; review.approved = null; refresh(); save(); };
+        el.querySelector('.chg').onclick = () => { e.status = 'change'; review.approved = null; refresh(); save(); el.querySelector('input').focus(); };
+        el.querySelector('textarea').addEventListener('input', ev => { e.comment = ev.target.value; save(); });
+      }
+    }
+  }
+  $('general').value = review.general || '';
+  refresh();
+}
+
+function refresh() { for (const l of allLines()) paintLine(l._el, l); progress(); }
+
+$('general').addEventListener('input', ev => { review.general = ev.target.value; save(); });
+$('approve').onclick = () => {
+  review.approved = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  refresh(); save();
+};
+
+(async () => {
+  if (!film) { document.querySelector('main').innerHTML = '<p class="err">Open this page with ?film=&lt;id&gt;.</p>'; return; }
+  try {
+    draft = await fetch(`/mvs/${film}/lyrics_draft.json`).then(r => { if (!r.ok) throw new Error(`lyrics_draft.json: ${r.status}`); return r.json(); });
+    review = await fetch(`/mvs/${film}/review/lyrics.json`).then(r => r.ok ? r.json() : review).catch(() => review);
+    review.lines ??= {};
+    render();
+  } catch (e) { document.querySelector('main').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+})();
+</script>
+</body>
+</html>

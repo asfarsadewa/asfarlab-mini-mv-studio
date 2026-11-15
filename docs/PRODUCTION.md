@@ -20,6 +20,7 @@ Every film must meet each point.
 | Music | Every production is a music video. People move with the music. Crowds dance |
 | Continuity | A person cannot jump to a new place on the same plate. Show the journey, or cut to a different plate |
 | Subtitles | The sung lyrics on top. Bahasa Indonesia below. Both lines appear for every sung line. Indonesian is first class, and poetic wording is preferred. If the song is in Bahasa Indonesia, the subtitle is the sung line only. Set `id` to an empty string |
+| Time and place | The opening title names the time and place of the story, such as `Tokyo, 1985`. Put it in `place` in `brief.json`. It sits under the title and disappears with the title. `title_mask` in `pixkit.py` draws it |
 | End card | `Generated in Mini MV Studio`, your handle from `studio.json` and the year of production, after the song. `render.py` adds it |
 | Weight | The delivery is the one mp4 from `render.py`. Do not build a separate mobile encode. Heavy 3D stays in the bake |
 | Review | The owner approves the film in the review canvas before it is final |
@@ -64,7 +65,7 @@ Each film delivers into its own folder.
 
 | Path | Contents |
 |---|---|
-| `output/<id>/<id>_mv.mp4` | The full film. This is the delivery |
+| `output/<id>/<Romanized title>.mp4` | The full film. This is the delivery. Its name is the full romanized title from `romanized` in `brief.json`, such as `Mou Ichimai.mp4`. A film without `romanized` writes `<id>_mv.mp4` |
 | `output/<id>/<id>_test.mp4` | The test window. It is a working file |
 
 ## Step 1: Write the brief
@@ -77,11 +78,13 @@ Put these fields in `brief.json`: `id`, `title`, `grid`, `fps`, `paper`, `year`,
 
 The owner checks the lyrics before Lyria composes the song. A generated song keeps every word of the prompt. A wrong word costs a full take.
 
-1. Send the owner the lyrics in the sung language, one line at a time.
-2. Put a plain translation and a short note on word choice under each line.
-3. Mark each word that you are not sure of, such as a regional form or an uncommon register.
-4. Wait for the owner to correct the lyrics or to approve them.
-5. Write the approved lyrics into `brief.json`. Then make the song.
+The gate applies when the owner can review the sung language. For any other language, go straight to the ear check.
+
+1. Write the draft into `mvs/<id>/lyrics_draft.json`: the title, the language, the story, the style, and sections of lines. Give each line an id, the text, a plain gloss and a short note on word choice. Put a `flag` on each line with a word that you are not sure of, such as a regional form or an uncommon register. A chorus repeat names its first line in `same_as`.
+2. Send the owner the review page: `http://localhost:5350/tools/review/lyrics.html?film=<id>`. The review works by exception. A line that the owner leaves alone keeps the draft. An edited line is a change, and a word diff shows it. Change with no edit and a comment asks you for a new version. A repeat follows its first line. The page saves to `mvs/<id>/review/lyrics.json`.
+3. Read the review with `python tools/lyrics_gate.py status mvs/<id>`.
+4. Wait for the owner to approve the lyrics on the page.
+5. Run `python tools/lyrics_gate.py apply mvs/<id>`. It writes the approved lyrics into `brief.json` and lists each change. Then make the song.
 
 Do not run `lyria.py` before the owner approves the lyrics.
 
@@ -323,7 +326,7 @@ Analog mode is optional for each film. It treats each finished frame at the deli
 Turn it on in `brief.json`. Each switch works alone.
 
 ```json
-"analog": {"tape": true, "crt": true, "scanlines": true, "amount": 1.0}
+"analog": {"tape": true, "crt": true, "scanlines": true, "bw": false, "amount": 1.0}
 ```
 
 | Switch | Effect |
@@ -331,6 +334,7 @@ Turn it on in `brief.json`. Each switch works alone.
 | `tape` | Shadow, wash, luma smear and ghost, chroma bleed to the right, light noise, random tracking tears, dropouts, creases and head-switch shear |
 | `crt` | A curved tube with rounded corners, a feathered edge into a dark bezel, a phosphor mask, highlight bloom and a faint glass glare |
 | `scanlines` | A fine dark line on every third row. Bright areas fill the gap |
+| `bw` | Black and white, with a gentle contrast curve, like a 1950s print or television |
 | `amount` | The mix with the clean frame, from 0 to 1 |
 
 The owner chooses the switches for each film. Without the block, the film renders clean.
@@ -338,6 +342,32 @@ The owner chooses the switches for each film. Without the block, the film render
 To try a look without a change to the brief, pass `--analog` to `render.py`. For example, `--analog '{"crt": true}'` adds the tube. `--analog off` turns the mode off.
 
 Tape noise makes the file larger, so analog mode encodes at CRF 18. Read the strips with the mode on. The tube edge can come close to the subtitle bar.
+
+### Radio mode
+
+Radio mode is optional for each film. It makes the song sound like it comes through an old radio. `tools/radio.py` does the work. `render.py` runs it on the take before the mastering, so the film still lands at -14 LUFS.
+
+Turn it on in `brief.json`.
+
+```json
+"radio": true
+```
+
+`true` gives the studio default: AM, intensity 0.6, full mix, the tuning intro and seed 1. To change part of it, give an object with only those fields, such as `{"mode": "sw"}`.
+
+| Field | Effect |
+|---|---|
+| `mode` | `am` is a broadcast band of 200 to 4500 Hz. `sw` is shortwave: a narrower band, deeper fading, more crackle and more drive |
+| `intensity` | Hiss, crackle and fade depth, from 0 to 1. At 0 the radio keeps its tone and loses its noise |
+| `mix` | The mix with the clean take, from 0 to 1. Use about 0.7 for a light touch |
+| `tune` | The film opens on static and a sliding whistle. The station locks in after 2 seconds |
+| `seed` | The noise pattern. A fixed seed gives the same sound on each render |
+
+The output is mono, because a real AM or shortwave station is mono. The pass is zero-phase, so beats and word times do not move.
+
+To try a sound without a change to the brief, pass `--radio` to `render.py`. For example, `--radio '{"mode": "sw"}'`. `--radio off` turns the mode off.
+
+You cannot hear the result. Send the owner a short sample before the full render.
 
 ## Step 10: Check the frames yourself
 

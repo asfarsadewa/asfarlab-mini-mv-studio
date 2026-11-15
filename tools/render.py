@@ -2,6 +2,7 @@
 # The film module lives at mvs/<id>/film.py. It exposes make(ctx), which returns draw(i, t, T) -> HxWx3 uint8.
 # Usage: python tools/render.py mvs/<id> [--scale 3] [--stills 0.5,5.1,9] [--out output/name.mp4] [--strict]
 # Analog mode: if brief.json has an "analog" block, tools/analog.py treats every frame at the delivery size.
+# Radio mode: if brief.json has a "radio" block, tools/radio.py turns the take into an old radio sound before mastering.
 import argparse, datetime, importlib.util, json, re, subprocess, sys
 from pathlib import Path
 from PIL import Image
@@ -10,6 +11,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent))
 from pixkit import END_CARD_SECONDS, Sprite, bayer_field, end_card
 from analog import Analog
+import radio
 
 sys.stdout.reconfigure(encoding="utf-8")
 ap = argparse.ArgumentParser()
@@ -20,6 +22,7 @@ ap.add_argument("--out", default="")
 ap.add_argument("--full", action="store_true", help="Render the full window of the brief. The default is the test window.")
 ap.add_argument("--window", default="", help="Override the window, as start,end in song seconds.")
 ap.add_argument("--analog", default="", help="Override the analog block of the brief as JSON, such as '{\"crt\": true}'. Use 'off' to turn it off.")
+ap.add_argument("--radio", default="", help="Override the radio block of the brief as JSON, such as '{\"mode\": \"sw\"}'. Use 'off' to turn it off.")
 ap.add_argument("--strict", action="store_true", help="Exit with an error if a sprite holds one frame too long. The mp4 is still written.")
 a = ap.parse_args()
 
@@ -38,18 +41,25 @@ end_frames = round(END_CARD_SECONDS * fps) if a.full else 0
 total = song_frames + end_frames
 work = root / "build"
 work.mkdir(exist_ok=True)
+radio_cfg = brief.get("radio")
+if a.radio:
+    radio_cfg = None if a.radio == "off" else {**(radio_cfg if isinstance(radio_cfg, dict) else {}), **json.loads(a.radio)}
+# The take keeps its timing: the radio pass is zero-phase, so beats and word times still fit.
+source = radio.render_take(take, work / "radio_take.wav", radio_cfg) if radio_cfg else take
 # Each film delivers into its own folder.
-out = Path(a.out or f"output/{brief['id']}/{brief['id']}_{'mv' if a.full else 'test'}.mp4")
+# The delivery takes the full romanized title as its file name, such as "Mou Ichimai.mp4". Older films keep <id>_mv.mp4.
+delivery = f"{brief['romanized']}.mp4" if brief.get("romanized") else f"{brief['id']}_mv.mp4"
+out = Path(a.out or f"output/{brief['id']}/{delivery if a.full else brief['id'] + '_test.mp4'}")
 out.parent.mkdir(parents=True, exist_ok=True)
 
 # Master the whole take to -14 LUFS with a fixed gain, then cut the window, so a cut keeps the level of the song.
-measured = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(take), "-af", "loudnorm=I=-14:TP=-1.5:LRA=14:print_format=json", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8").stderr
+measured = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(source), "-af", "loudnorm=I=-14:TP=-1.5:LRA=14:print_format=json", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8").stderr
 m = json.loads(re.search(r"\{[^{}]*\}", measured, re.S).group(0))
 norm = f"loudnorm=I=-14:TP=-1.5:LRA=14:measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true"
 length = end - start
 whole = total / fps
 wav = work / "audio.wav"
-subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(take), "-af",
+subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source), "-af",
                 f"{norm},aresample=48000,atrim={start}:{end},asetpts=PTS-STARTPTS,afade=t=in:d=0.08,afade=t=out:st={length - 0.6}:d=0.6,apad=whole_dur={whole}",
                 "-ac", "2", "-c:a", "pcm_s16le", str(wav)], check=True)
 

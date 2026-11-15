@@ -1,9 +1,10 @@
 # Analog mode: an optional tape and tube pass over the finished frame. A film turns it on in brief.json:
-#   "analog": {"tape": true, "scanlines": false, "crt": false, "amount": 1.0}
+#   "analog": {"tape": true, "scanlines": false, "crt": false, "bw": false, "amount": 1.0}
 # The pass runs at the delivery size, after the nearest-neighbour upscale, so it can soften the pixel grid like a real
 # signal. Every effect is deterministic for a frame number, so a render is repeatable.
-# Tape: shadow (vignette, lifted and crushed blacks), wash (tired colour, soft highlights), luma smear and ghost,
+# Tape: shadow (lifted and crushed blacks, no vignette), wash (tired colour, soft highlights), luma smear and ghost,
 #   chroma bleed to the right, light noise, random tracking tears, dropouts, creases and head-switch shear.
+# Black and white: the picture becomes monochrome, with a little extra contrast, like a 1950s print or television.
 # Scanlines: dark gaps between lines, brighter in highlights. Optional.
 # CRT: barrel curvature, rounded corners in a dark bezel, an aperture-grille phosphor mask, bloom and a glass glare.
 import math
@@ -18,13 +19,12 @@ def _h(x):
 
 class Analog:
     def __init__(self, cfg, side, fps):
-        self.cfg = {"tape": True, "scanlines": False, "crt": False, "amount": 1.0, **cfg}
+        self.cfg = {"tape": True, "scanlines": False, "crt": False, "bw": False, "amount": 1.0, **cfg}
         self.side, self.fps = side, fps
         S = side
         yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
         u, v = (xx - S / 2) / (S / 2), (yy - S / 2) / (S / 2)
         r2 = u * u + v * v
-        self.vig = np.clip(1 - 0.30 * r2 ** 1.4, 0.55, 1)[..., None].astype(np.float32)
         self.noise = [np.random.default_rng(k).normal(0, 3.0, (S // 2, S // 2)).astype(np.float32) for k in range(8)]
         # Scanlines: one line pair for each source pixel row would be too coarse. Use 2 screen rows per line.
         line = (np.arange(S) % 3 == 2).astype(np.float32)
@@ -47,8 +47,7 @@ class Analog:
             self.tube = (e * e * (3 - 2 * e))[..., None].astype(np.float32)
             # Only a slight fall-off toward the rim, as on a real tube.
             self.rim = np.clip(1 - 0.10 * (su * su + sv * sv) ** 2, 0.8, 1)[..., None].astype(np.float32)
-            # In CRT mode the tube edge does the framing, so the tape vignette is much weaker.
-            self.vig = np.clip(1 - 0.08 * r2 ** 1.4, 0.85, 1)[..., None].astype(np.float32)
+
             # Aperture grille: vertical red, green and blue stripes, subtle.
             stripe = np.arange(S) % 3
             mask = np.full((S, 3), 0.80, np.float32)
@@ -88,7 +87,6 @@ class Analog:
         Y2 += cv2.resize(self.noise[i % 8], (S, S), interpolation=cv2.INTER_NEAREST)
         out = cv2.cvtColor(np.clip(np.dstack([Y2, bleed(Cr), bleed(Cb)]), 0, 255).astype(np.uint8), cv2.COLOR_YCrCb2RGB).astype(np.float32)
         out *= np.array([1.04, 0.99, 0.92], np.float32)   # A warm, tired tint.
-        out *= self.vig
         rng = np.random.default_rng(i * 7 + 1)
         for _ in range(rng.poisson(1.2)):
             y, x = rng.integers(0, S), rng.integers(0, S - 40)
@@ -109,6 +107,11 @@ class Analog:
         """frame: the finished frame at the delivery size, RGB uint8. Returns the analog frame, RGB uint8."""
         cfg = self.cfg
         out = self.tape(frame, i) if cfg["tape"] else frame.astype(np.float32)
+        if cfg["bw"]:
+            # Luma only, with a gentle S-curve for the contrast of old film. The tube and scanlines come after.
+            lum = out[..., 0] * 0.299 + out[..., 1] * 0.587 + out[..., 2] * 0.114
+            lum = 255 * (0.5 + 0.5 * np.tanh((lum / 255 - 0.5) * 2.2) / np.tanh(1.1))
+            out = np.repeat(lum[..., None], 3, axis=2).astype(np.float32)
         if cfg["scanlines"]:
             # Bright lines spread into the gap, as on a real tube.
             lum = out.mean(axis=2, keepdims=True) / 255.0

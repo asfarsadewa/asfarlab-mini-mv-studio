@@ -441,7 +441,7 @@ const fail = e => { document.querySelector('main').innerHTML = `<p class="err">T
   (function loop() { tick(); requestAnimationFrame(loop); })();
   await Promise.all(Object.entries(occ).map(([p, items]) => loadOcc(p, items)));
   const metadata = new Promise(r => v.addEventListener('loadedmetadata', r, { once: true }));
-  await loadVideo(`${brief.id}_mv.mp4`);
+  await loadVideo(brief.romanized ? `${encodeURIComponent(brief.romanized)}.mp4` : `${brief.id}_mv.mp4`);
   await metadata;
   // The renderer adds the studio credit after the last scene.
   const lastTo = scenes[scenes.length - 1].to;
