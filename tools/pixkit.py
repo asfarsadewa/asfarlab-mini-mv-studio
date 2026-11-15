@@ -173,13 +173,24 @@ STUDIO_LINE = "Generated in Mini MV Studio"
 STUDIO_HANDLE = studio_handle()
 
 
+def glyph_font(text, size):
+    """MS Gothic, or Microsoft YaHei if MS Gothic lacks a glyph in the text. MS Gothic has no simplified 垄 or 风."""
+    font = ImageFont.truetype(font_path("msgothic.ttc"), size)
+    missing = font.getmask("󰀀", mode="1")
+    for c in text:
+        m = font.getmask(c, mode="1")
+        if c != " " and m.size == missing.size and bytes(m) == bytes(missing):
+            return ImageFont.truetype(font_path("msyh.ttc"), size)
+    return font
+
+
 def title_mask(brief, size, x=18, y=22):
     """The opening title card as a mask: the title, then the Chinese and Indonesian titles if the brief has them,
     then the time and place, such as "Tokyo, 1985". The film draws it in ink and fades it with the title."""
     m = Image.new("L", (size, size), 0)
     d = ImageDraw.Draw(m)
     d.fontmode = "1"
-    rows = [(brief["title"], ImageFont.truetype(font_path("msgothic.ttc"), 16), 18)]
+    rows = [(brief["title"], glyph_font(brief["title"], 16), 18)]
     if brief.get("title_zh"):
         rows.append((brief["title_zh"], ImageFont.truetype(font_path("msyh.ttc"), 14), 20))
     if brief.get("title_id"):
