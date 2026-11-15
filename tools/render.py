@@ -1,6 +1,7 @@
 # Renders one film: steps the picture frame by frame, masters the audio, and writes a square mp4.
 # The film module lives at mvs/<id>/film.py. It exposes make(ctx), which returns draw(i, t, T) -> HxWx3 uint8.
 # Usage: python tools/render.py mvs/<id> [--scale 3] [--stills 0.5,5.1,9] [--out output/name.mp4] [--strict]
+# Analog mode: if brief.json has an "analog" block, tools/analog.py treats every frame at the delivery size.
 import argparse, datetime, importlib.util, json, re, subprocess, sys
 from pathlib import Path
 from PIL import Image
@@ -8,6 +9,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
 from pixkit import END_CARD_SECONDS, Sprite, bayer_field, end_card
+from analog import Analog
 
 sys.stdout.reconfigure(encoding="utf-8")
 ap = argparse.ArgumentParser()
@@ -17,6 +19,7 @@ ap.add_argument("--stills", default="")
 ap.add_argument("--out", default="")
 ap.add_argument("--full", action="store_true", help="Render the full window of the brief. The default is the test window.")
 ap.add_argument("--window", default="", help="Override the window, as start,end in song seconds.")
+ap.add_argument("--analog", default="", help="Override the analog block of the brief as JSON, such as '{\"crt\": true}'. Use 'off' to turn it off.")
 ap.add_argument("--strict", action="store_true", help="Exit with an error if a sprite holds one frame too long. The mp4 is still written.")
 a = ap.parse_args()
 
@@ -59,10 +62,16 @@ credit = end_card(grid, brief["paper"], brief.get("year", datetime.date.today().
 bayer = bayer_field(grid)
 last_song_frame = credit
 side = grid * a.scale
+analog_cfg = brief.get("analog")
+if a.analog:
+    analog_cfg = None if a.analog == "off" else {**(analog_cfg or {}), **json.loads(a.analog)}
+analog = Analog(analog_cfg, side, fps) if analog_cfg else None
+# With analog mode the pipe carries finished frames at the delivery size. Tape noise needs a little more compression.
+in_side = side if analog else grid
 ff = subprocess.Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                       "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{grid}x{grid}", "-r", str(fps), "-i", "-", "-i", str(wav),
+                       "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{in_side}x{in_side}", "-r", str(fps), "-i", "-", "-i", str(wav),
                        "-vf", f"scale={side}:{side}:flags=neighbor:out_color_matrix=bt709:out_range=tv,format=yuv420p",
-                       "-c:v", "libx264", "-preset", "slow", "-crf", "14", "-profile:v", "high",
+                       "-c:v", "libx264", "-preset", "slow", "-crf", "18" if analog else "14", "-profile:v", "high",
                        "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
                        "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(out)], stdin=subprocess.PIPE)
 stills = {round(float(s) * fps) for s in a.stills.split(",") if s}
@@ -76,9 +85,12 @@ for i in range(total):
         reveal = (i - song_frames + 1) / (0.4 * fps)
         frame = np.where((bayer < reveal)[..., None], credit, last_song_frame).astype(np.uint8)
     assert frame.shape == (grid, grid, 3) and frame.dtype == np.uint8
+    if analog:
+        frame = analog(np.ascontiguousarray(frame.repeat(a.scale, axis=0).repeat(a.scale, axis=1)), i)
     ff.stdin.write(frame.tobytes())
     if i in stills:
-        Image.fromarray(frame).resize((side, side), Image.NEAREST).save(work / f"still_{t:05.2f}.png")
+        big = frame if analog else np.asarray(Image.fromarray(frame).resize((side, side), Image.NEAREST))
+        Image.fromarray(big).save(work / f"still_{t:05.2f}.png")
 ff.stdin.close()
 if ff.wait():
     sys.exit("ffmpeg failed.")

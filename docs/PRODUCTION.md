@@ -73,6 +73,18 @@ Write one idea that nobody could use for another film. Plan the scenes against t
 
 Put these fields in `brief.json`: `id`, `title`, `grid`, `fps`, `paper`, `year`, `take`, `plate`, `test`, `full`, `hit`, `lines`, `takes` and `lyrics`.
 
+### Lyric review gate
+
+The owner checks the lyrics before Lyria composes the song. A generated song keeps every word of the prompt. A wrong word costs a full take.
+
+1. Send the owner the lyrics in the sung language, one line at a time.
+2. Put a plain translation and a short note on word choice under each line.
+3. Mark each word that you are not sure of, such as a regional form or an uncommon register.
+4. Wait for the owner to correct the lyrics or to approve them.
+5. Write the approved lyrics into `brief.json`. Then make the song.
+
+Do not run `lyria.py` before the owner approves the lyrics.
+
 ## Step 2: Make the song
 
 Run this command. It skips a complete take. A complete take has audio and a receipt. If the receipt is missing, the tool replaces the audio. An approved film keeps its audio.
@@ -303,6 +315,29 @@ python tools/render.py mvs/<id>
 ```bash
 python tools/render.py mvs/<id> --full
 ```
+
+### Analog mode
+
+Analog mode is optional for each film. It treats each finished frame at the delivery size, like a tape played on an old television. `tools/analog.py` does the work. `render.py` calls it.
+
+Turn it on in `brief.json`. Each switch works alone.
+
+```json
+"analog": {"tape": true, "crt": true, "scanlines": true, "amount": 1.0}
+```
+
+| Switch | Effect |
+|---|---|
+| `tape` | Shadow, wash, luma smear and ghost, chroma bleed to the right, light noise, random tracking tears, dropouts, creases and head-switch shear |
+| `crt` | A curved tube with rounded corners, a feathered edge into a dark bezel, a phosphor mask, highlight bloom and a faint glass glare |
+| `scanlines` | A fine dark line on every third row. Bright areas fill the gap |
+| `amount` | The mix with the clean frame, from 0 to 1 |
+
+The owner chooses the switches for each film. Without the block, the film renders clean.
+
+To try a look without a change to the brief, pass `--analog` to `render.py`. For example, `--analog '{"crt": true}'` adds the tube. `--analog off` turns the mode off.
+
+Tape noise makes the file larger, so analog mode encodes at CRF 18. Read the strips with the mode on. The tube edge can come close to the subtitle bar.
 
 ## Step 10: Check the frames yourself
 
