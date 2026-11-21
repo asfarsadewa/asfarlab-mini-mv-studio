@@ -174,13 +174,13 @@ STUDIO_HANDLE = studio_handle()
 
 
 def glyph_font(text, size):
-    """MS Gothic, or Microsoft YaHei if MS Gothic lacks a glyph in the text. MS Gothic has no simplified 垄 or 风."""
-    font = ImageFont.truetype(font_path("msgothic.ttc"), size)
-    missing = font.getmask("󰀀", mode="1")
-    for c in text:
-        m = font.getmask(c, mode="1")
-        if c != " " and m.size == missing.size and bytes(m) == bytes(missing):
-            return ImageFont.truetype(font_path("msyh.ttc"), size)
+    """MS Gothic, else Microsoft YaHei, else Malgun Gothic: the first font that has every glyph in the text.
+    MS Gothic has no simplified 垄 or 风. Neither MS Gothic nor YaHei has Hangul."""
+    for name in ("msgothic.ttc", "msyh.ttc", "malgun.ttf"):
+        font = ImageFont.truetype(font_path(name), size)
+        missing = font.getmask("󰀀", mode="1")
+        if all(c == " " or (m := font.getmask(c, mode="1")).size != missing.size or bytes(m) != bytes(missing) for c in text):
+            return font
     return font
 
 

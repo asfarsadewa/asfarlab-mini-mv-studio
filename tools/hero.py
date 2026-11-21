@@ -800,11 +800,46 @@ def bake_cmd(root, job_path):
         d = point - ref
         return [round(anchor_px[0] + d.dot(right) * job["ppu"], 1), round(anchor_px[1] - d.dot(up) * job["ppu"], 1)]
 
+    # A hoe for a two-handed clip, with "hoe": true. Its handle runs through both hands on every frame.
+    # The handle is thicker than a real one, so it stays visible at about 15 pixels per unit.
+    # The blade sits past the lower hand and faces back toward the chest, as a hoe blade does.
+    hoe = None
+    if job.get("hoe"):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.05, depth=1.0, location=(0, 0, 0))
+        handle = bpy.context.object
+        handle.data.materials.append(material("HoeWood", (0.30, 0.18, 0.08)))
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 0))
+        blade = bpy.context.object
+        blade.data.materials.append(material("HoeIron", (0.16, 0.16, 0.17)))
+        hoe = (handle, blade)
+
+    def place_hoe():
+        if not hoe:
+            return None
+        handle, blade = hoe
+        top, low = rig.matrix_world @ bone_l.head, rig.matrix_world @ bone_r.head
+        axis = (low - top).normalized()
+        start, end = top - axis * 0.15, low + axis * 0.75
+        chest = rig.matrix_world @ rig.pose.bones[PFX + "Spine2"].head
+        back = chest - end
+        back = (back - axis * back.dot(axis)).normalized()
+        side = axis.cross(back).normalized()
+
+        def put(obj, centre, x, y, z, sx, sy, sz):
+            m = Matrix((x * sx, y * sy, z * sz)).transposed().to_4x4()
+            m.translation = centre
+            obj.matrix_world = m
+
+        put(handle, (start + end) / 2, side, back, axis, 1, 1, (end - start).length)
+        put(blade, end + back * 0.13, side, back, axis, 0.26, 0.28, 0.05)
+        return end
+
     for f in range(first - pre, first):
         scene.frame_set(f)
     index = 0
     for f in range(first, last + 1):
         scene.frame_set(f)
+        hoe_end = place_hoe()
         ref = smooth[f - first]
         cam.location = ref + view * 20
         bpy.context.view_layer.update()
@@ -812,7 +847,12 @@ def bake_cmd(root, job_path):
             r.filepath = f"{job['out']}/f_{index:04d}.png"
             bpy.ops.render.render(write_still=True)
             delta = ref - smooth[0]
-            tip = (staff.matrix_world @ Vector((0, 0, 1.15))) if job.get("staff") else (torch.matrix_world @ Vector((0, 0, 0.36)))
+            if hoe_end is not None:
+                tip = hoe_end
+            elif job.get("staff"):
+                tip = staff.matrix_world @ Vector((0, 0, 1.15))
+            else:
+                tip = torch.matrix_world @ Vector((0, 0, 0.36))
             meta["frames"].append({
                 "path": [round(delta.dot(right) * job["ppu"], 2), round(-delta.dot(up) * job["ppu"], 2)],
                 "right": to_px(rig.matrix_world @ bone_r.head, ref), "left": to_px(rig.matrix_world @ bone_l.head, ref), "tip": to_px(tip, ref),

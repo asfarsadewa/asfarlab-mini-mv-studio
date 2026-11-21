@@ -140,6 +140,8 @@ Stop here. Do not spend on plates, characters or motion until the owner chooses 
 
 ## Step 4: Paint the plates
 
+Stage the main action in a wide view of the floating diorama. Show the ground edge and the paper around it. Keep the 30 degree orthographic view so the audience can follow the people through the set. Use a brief close-up when a gesture or small object is hard to see. Return to the wide view after that detail.
+
 Use `tools/paint.py` with `--image`. Pass an approved plate as image 1, so that a new plate matches. The first plate of a film uses `mvs/noroshi/plates/island-raw.png` as a style reference.
 
 Generate each plate at `--quality medium --size 1024x1024 --no-augment`. Save the prompt as `plates/<name>.prompt.txt`.
@@ -515,6 +517,7 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A walker starts off the island | A path can pass the footprint check and still leave the island. Bring crowds in from the back rows and sides. Read the first frames of the scene |
 | A person walks over a canopy | A person under a roof needs the front of that roof as an occluder, with its base at the front posts |
 | A hero prop must stay in the hand | Draw the prop at `Sprite.point(i, "right", x, y)`. Use `ik` to raise the arm in the walk clip |
+| The wrist target touches a load but the visible hand misses it | Check which bones move the palm and forearm. Fix the mesh weights. For a shoulder load, bind the sack and wrist targets to the chest and bake them together. Check the fingers in both the wide shot and the close-up. |
 | A train must pass behind people and props | Draw it after the plate, and mask it with `Occlusion.blocks` at the row of the rails. Draw people after it |
 | The owner asks for subtitles in another language | The owner can replace the Indonesian line for one film. Put that language in the `id` field of each line. Set `sub_label` in `brief.json`, so that the canvas names the column |
 | A prompt asks for a Javanese song | Lyria sings Javanese. Use `transcribe.py --lang jav` |
@@ -542,7 +545,7 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A small story beat does not read | A phone or a letter is a few pixels in a wide shot. Cut to a close-up plate for the beat, and draw the change in code. See `close_up` in `examples/film_code/zaizou.py` |
 | A child model has smeared wings for arms | The `JOINTS` table in `hero.py` fits adult proportions. A child has a larger head and lower shoulders. Measure the joints on the concept as fractions of the height. Put them in `joints` in the `outfit.json` of the model. Run `hero.py rig` again. Bake a child at about 0.85 times the `ppu` of an adult |
 | A reused old model fails to bake | An old `hero.blend` can lack the props that the current bake expects, such as the staff and the bow. Run `hero.py rig` again on the copy in the new film. The rig rebuilds from `hero.glb`. The home film does not change |
-| People look tiny next to the props | Do not guess `ppu`. Measure a prop of known height on each plate: a door is 2 m, a desk is 0.75 m, a phone box is about 2 m. A person is about 1.7 m. Run the proof against that prop. Close-up rooms show this most, because their furniture is painted large. Several earlier films have people that are too small in close rooms |
+| People look tiny next to the props | Do not guess `ppu`. Measure a prop of known height on each plate: a door is 2 m, a desk is 0.75 m, a phone box is about 2 m. A person is about 1.7 m. Run the proof against that prop. Close-up rooms show this most, because their furniture is painted large. Several earlier films have people that are too small in close rooms. Outdoor dioramas show it too. Sisi B baked people at 16 `ppu`. Its door needed 22. Pangkalan baked people at 13 `ppu` on its street. Its bench and shelter needed 17 |
 | Blinking bulbs also catch windows and roof tiles | A colour test alone finds lit windows and tile highlights. Keep only small isolated lights inside the band where the strings hang. Pulse their brightness, and keep their colour. See `bulbs` in `examples/film_code/kirimsalam.py` |
 | Bright snow turns into paper | The usual paper test also catches bright pixels inside the island. Count pale pixels as paper only where they connect to the frame edge. See `plate` in `examples/film_code/haojiao.py` |
 | A warm grade turns snow into paper | Warm light on white snow lands on the paper colour, and the island loses its edge. Tint snow cool, such as rose or blue |
@@ -588,7 +591,29 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A person vanishes before a door | The base row of the house is below the feet at the door. Set the base row above the door approach, and read the walk in a strip |
 | A small white shape reads as a censor bar | Do not draw a bandage across the body. Keep a prop small, and put it in a hand |
 | The canvas shows a directory listing | The root path with `?film=<id>` does not redirect. Open `/tools/review/index.html?film=<id>` |
+| The desktop player stays black while the zoom shows the film | Draw decoded video frames on the main canvas. Check the picture during playback and after a seek. |
 | A job path fails with no error | On Windows with Git Bash, a `/c/...` path renders to the wrong place. Pass `C:/...` to Blender |
+| Blender saves a render outside the film | Blender resolves a relative output path in its own way. Pass an absolute path to a bake script |
+| An occluder covers a walkable street | A refined terrace outline can spread over the road between two rows. Read the walkers in a strip. End the path before the occluder, or trace the outline tighter |
+| A person stands behind a loom in a mid shot | A spot that reads in the wide shot can sit inside an occluder. Read the mid shot itself. Move the spot onto open floor |
+| A crowd copy competes with a hero | A tint keeps a saturated colour, such as a red headscarf. Give the crowd copies the colour of another cast member |
+| A clip holds frame 0 at the start of a scene | `loop` with a start time after the scene start holds frame 0 until that time. Start the clip early, so that it already moves when the scene opens |
+| A vehicle costs too much to build | `tools/hunyuan.py` builds a prop or vehicle on fal at a lower cost than Tripo. Bake it with `examples/film_code/meemaw_bake_vehicle.py` |
+| One sprite bake runs for hours | `bake_sprites.py` bakes one job at a time. Run two bakes in parallel on separate cast folders |
+| A new vehicle repeats an old one | The catalog lists people and clips. It does not list props. Before you build a vehicle, list `mvs/*/props/` in your films |
+| A coach buries a small plate | A real coach at the people's scale fills half a diorama. Pick a smaller vehicle, such as a minibus. Set its length in units: a person stands 2.14 units tall |
+| A hand tool vanishes | A real handle is thinner than one pixel at 15 `ppu`. `hero.py` bakes the `hoe` with a thick handle. Read the tool in a strip at the final scale |
+| A still is missing from a window render | `--stills` counts seconds from the start of the window. It does not count song time |
+| A person looks shirtless | A pale pink or beige top has the colour of skin at sprite scale. Choose a top colour far from the skin, such as sky blue or white. Read the proof before Tripo builds a second time |
+| A Korean title shows boxes | MS Gothic and YaHei have no Hangul. `glyph_font` in `pixkit.py` falls back to Malgun Gothic. Use Malgun Gothic for a sung Korean row too |
+| A person behind a counter floats on top of it | The back edge of the counter top is not the floor. Put the feet one counter height lower on screen, about 21 pixels at 19 `ppu` for a 1 m counter. The counter occluder then hides the body below the chest |
+| A person walks through the shelves | A straight path across a shop crosses the aisle fronts. The shelf occluders then hide half the body. Route walks along the floor strip in front of the shelves. Fade the person out before a pot or other object on the path |
+| Stacked boxes on a counter do not hide a person | The counter occluder ends at the counter top. Trace anything that stands higher, such as boxes, as its own occluder with the counter base |
+| Floor glints show on a person | Draw floor effects before the people |
+| The review canvas says the source image cannot be decoded | The canvas loads `occlusion/<plate>.png` for each plate. Run `build_occlusion.py` even if every occluder list is empty |
+| A person who holds something walks out of the frame | The catalog clip `carry` walks with root motion. For a standing hold, take the free PINOC library clip Carry Object Idle |
+| A vehicle does not fit a narrow lane | A real car at the scale of the people can hang over the island edge. Keep the car off the island. Show its headlights on the ground in code |
+| A held object is missing from a clip | Each baked frame records the hand positions. Draw a small object, such as a watering can, at `Sprite.point(i, "right", x, y)` |
 
 ## Work in parallel
 

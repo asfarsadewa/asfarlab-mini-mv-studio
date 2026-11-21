@@ -95,6 +95,7 @@
       <div>
         <div class="stage" id="stage">
           <video id="v" playsinline preload="auto"></video>
+          <canvas id="picture" width="360" height="360" aria-hidden="true"></canvas>
           <canvas id="overlay" width="360" height="360"></canvas>
         </div>
         <div class="bar">
@@ -166,7 +167,19 @@ const COLOURS = [[0,0,0],[255,0,90],[0,200,255],[255,210,0],[60,220,90],[180,80,
 
 let review, brief, notes = [], scenes = [], lensAt = null, held = false, zoomSrc = 50, showOcc = false, showGrid = false;
 const v = $('v'), overlay = $('overlay'), octx = overlay.getContext('2d'), lens = $('lens'), lctx = lens.getContext('2d');
+const picture = $('picture'), pictureCtx = picture.getContext('2d');
 const occMaps = {};
+
+// The desktop browser can decode the video while its native video surface stays black.
+// Paint each presented frame below the overlays at the full encoded resolution.
+function drawPicture() {
+  if (v.readyState < 2 || !v.videoWidth) return;
+  if (picture.width !== v.videoWidth || picture.height !== v.videoHeight) {
+    picture.width = v.videoWidth;
+    picture.height = v.videoHeight;
+  }
+  pictureCtx.drawImage(v, 0, 0);
+}
 
 async function loadVideo(name) {
   const at = v.currentTime || 0;
@@ -386,6 +399,25 @@ function showView(name) {
 }
 
 function wire() {
+  v.addEventListener('loadeddata', drawPicture);
+  v.addEventListener('seeked', drawPicture);
+  if (v.requestVideoFrameCallback) {
+    v.requestVideoFrameCallback(function nextFrame() {
+      drawPicture();
+      v.requestVideoFrameCallback(nextFrame);
+    });
+  } else {
+    let shownFrame = -1;
+    function nextFrame() {
+      const frame = Math.floor(v.currentTime * FPS);
+      if (frame !== shownFrame && v.readyState >= 2) {
+        drawPicture();
+        shownFrame = frame;
+      }
+      requestAnimationFrame(nextFrame);
+    }
+    nextFrame();
+  }
   v.onplay = v.onpause = () => { $('play').textContent = v.paused ? 'Play' : 'Pause'; };
   v.onloadedmetadata = renderNotes;
   $('play').onclick = togglePlay;

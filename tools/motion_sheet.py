@@ -20,7 +20,7 @@ for spec in a.clips:
     clip, _, az = spec.partition(":")
     total = next((n for k, n in FRAMES.items() if clip.startswith(k)), 120)
     work = tempfile.mkdtemp()
-    job = {"clip": clip, "out": work.replace("\\", "/"), "ppu": a.ppu, "azimuth": float(az or 45), "cloth": False, "outfit": False, "torch": False, "step": max(1, total // a.per), "travel": clip.startswith(("climb", "walking")), "canvas": 4.4}
+    job = {"clip": clip, "out": work.replace("\\", "/"), "ppu": a.ppu, "azimuth": float(az or 45), "cloth": False, "outfit": False, "torch": False, "step": max(1, total // a.per), "travel": clip.startswith(("climb", "walking")), "canvas": 4.4, "hoe": clip.startswith("hoe")}
     job_path = Path(work) / "job.json"
     job_path.write_text(json.dumps(job))
     r = subprocess.run([BLENDER, "--background", "--python", str(TOOL), "--", "bake", a.hero, str(job_path)], capture_output=True, text=True, encoding="utf-8", errors="replace")
