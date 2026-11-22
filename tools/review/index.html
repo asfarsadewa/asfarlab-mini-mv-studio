@@ -463,6 +463,15 @@ const fail = e => { document.querySelector('main').innerHTML = `<p class="err">T
     return;
   }
   [brief, review] = await Promise.all([json(`${base}brief.json`), json(`${base}review.json`)]);
+  // A typewriter prologue plays before the song. Every song time moves later by its length.
+  const pro = await json(`${base}prologue.json`).catch(() => null);
+  if (pro && pro.seconds > 0) {
+    const off = pro.seconds;
+    brief.lines = brief.lines.map(l => ({ ...l, from: l.from + off, to: l.to + off }));
+    review.scenes = [{ name: 'Prologue', from: 0, to: off, plate: null, night: false },
+      ...review.scenes.map(s => ({ ...s, from: s.from + off, to: s.to + off }))];
+    review.checks = (review.checks || []).map(c => ({ ...c, t: c.t + off }));
+  }
   scenes = review.scenes;
   $('title').textContent = `${brief.title} review`;
   document.title = `${brief.id} review`;

@@ -371,6 +371,31 @@ To try a sound without a change to the brief, pass `--radio` to `render.py`. For
 
 You cannot hear the result. Send the owner a short sample before the full render.
 
+### Prologue
+
+The prologue is optional for each film. Before the song, a typewriter types the background of the story on the paper. `tools/prologue.py` draws it. `render.py` plays it.
+
+Turn it on in `brief.json`.
+
+```json
+"prologue": {"text": ["First paragraph.", "Second paragraph."]}
+```
+
+| Field | Effect |
+|---|---|
+| `text` | The paragraphs. The owner writes them, or approves a draft. They are user copy, so they follow the ASD-STE100 register |
+| `cps` | Characters per second. The default is 22 |
+| `hold` | Seconds the full page stays after the last character. The default is 2.0 |
+| `size` | The font size in grid pixels. The default is 13 |
+| `clicks` | `false` turns off the key strikes and the line bell |
+
+- A full render plays the prologue. A test render plays it with `--prologue on`. `--prologue off` turns it off.
+- The song starts after the prologue. The page gives way to the film through a Bayer dissolve.
+- Analog mode treats the prologue like the rest of the film. The radio pass touches only the song.
+- A full render writes `prologue.json` with the length. The review canvas reads it and moves every song time later.
+- `--stills` counts from the start of the prologue when the prologue plays.
+- Keep the text to about 250 characters. That runs about 20 seconds.
+
 ## Step 10: Check the frames yourself
 
 Read runs of consecutive frames at each place where a person meets scenery. Each spec is `name:start:step:count:x:y:w:h`.
@@ -614,6 +639,7 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A person who holds something walks out of the frame | The catalog clip `carry` walks with root motion. For a standing hold, take the free PINOC library clip Carry Object Idle |
 | A vehicle does not fit a narrow lane | A real car at the scale of the people can hang over the island edge. Keep the car off the island. Show its headlights on the ground in code |
 | A held object is missing from a clip | Each baked frame records the hand positions. Draw a small object, such as a watering can, at `Sprite.point(i, "right", x, y)` |
+| A long sung line is too wide for the caption bar | French and other long lines can pass 356 pixels at 15. Step the sung row down to 14, 13 or 12 for that line. See the `Lyrics` class in `examples/film_code/longwy.py` |
 
 ## Work in parallel
 
