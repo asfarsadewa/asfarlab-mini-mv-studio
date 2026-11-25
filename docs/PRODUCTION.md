@@ -640,6 +640,11 @@ Before you delete, confirm each item from the code. Read which plates and sprite
 | A vehicle does not fit a narrow lane | A real car at the scale of the people can hang over the island edge. Keep the car off the island. Show its headlights on the ground in code |
 | A held object is missing from a clip | Each baked frame records the hand positions. Draw a small object, such as a watering can, at `Sprite.point(i, "right", x, y)` |
 | A long sung line is too wide for the caption bar | French and other long lines can pass 356 pixels at 15. Step the sung row down to 14, 13 or 12 for that line. See the `Lyrics` class in `examples/film_code/longwy.py` |
+| A drawn prop looks like a placeholder | A rectangle in code reads as a box. Build the prop in 3D. Bind a load to the chest bone in a rig copy, or bake a vehicle with `bake_vehicle.py`. See `examples/film_code/gendhong_load_rig.py` |
+| A child on a back floats like a chair | Two sprites cannot overlap in depth. Pose the child's model in Blender, bake the pose into a still mesh, scale it to the child's size and bind it to the carrier's chest bone. See `examples/film_code/gendhong_carry_rig.py` |
+| A pusher flickers on a path | A clip with no root motion, such as `push`, has no stride. Step its frames by time. Step a walk with root motion by distance |
+| A child stands as tall as an adult | Catalog models stand 2.14 units tall, a child too. Bake a child at a lower `ppu`, about 0.75 of the adult value for a child of 6 |
+| A vehicle bakes end-on | A model from Hunyuan3D can lie along a different axis. Check one frame. Bake at a heading 90 degrees away if the side does not face the camera |
 
 ## Work in parallel
 
